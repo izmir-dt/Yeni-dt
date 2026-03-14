@@ -747,6 +747,10 @@ td { padding:9px 14px;font-size:12px; }
           </div>
         </div>
         <div class="header-right">
+          <button id="notif-btn" onclick="toggleNotif()" style="position:relative;width:32px;height:32px;border-radius:7px;background:var(--sidebar-accent);color:hsla(38,35%,92%,0.75);display:flex;align-items:center;justify-content:center;font-size:15px;" title="Bildirimler">
+            🔔
+            <span id="notif-dot" style="display:none;position:absolute;top:4px;right:4px;width:8px;height:8px;border-radius:50%;background:var(--sidebar-primary);border:1px solid var(--sidebar);"></span>
+          </button>
           <button class="theme-btn" id="theme-btn" title="Tema değiştir">🌙</button>
           <button class="hamburger" id="hamburger" aria-label="Menü">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
@@ -792,6 +796,14 @@ td { padding:9px 14px;font-size:12px; }
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
           TURNE
         </a>
+        <button class="nav-pill" data-page="cakisma" onclick="navigateTo('cakisma')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M6 21V9a9 9 0 0 0 9 9"/></svg>
+          ÇAKIŞMA
+        </button>
+        <button class="nav-pill" data-page="bildirimler" onclick="navigateTo('bildirimler')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          BİLDİRİMLER
+        </button>
         <button class="nav-pill" data-page="admin" onclick="navigateTo('admin')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
           ADMİN
@@ -806,14 +818,15 @@ td { padding:9px 14px;font-size:12px; }
 
 <script>
 
-// HTML attribute içinde güvenli JS string literal üret
+// HTML attribute içinde guvenli JS string literal uret
 function jsq(s) {
-  return "decodeURIComponent('" + encodeURIComponent(String(s)) + "')";
+  var enc = encodeURIComponent(String(s));
+  return ["decodeURIComponent(", String.fromCharCode(39), enc, String.fromCharCode(39), ")"].join("");
 }
 
-/* ═══════════════════════════════════════════════════════════════
+/* ===============================================================
    BACKEND & CACHE
-═══════════════════════════════════════════════════════════════ */
+=============================================================== */
 const BACKEND = 'https://tiyatro-backend.vercel.app';
 const CACHE = {};
 const CACHE_TTL = 5 * 60 * 1000; // 5 dk
@@ -834,12 +847,10 @@ async function fetchSheet(sheetName) {
     d = raw; // { headers, rows } — zaten doğru
   } else if (raw && Array.isArray(raw.values)) {
     // { values: [[header1,header2,...],[row1...],[row2...]] }
-    const [headers, ...rows] = raw.values;
-    d = { headers: headers || [], rows: rows || [] };
+    d = { headers: raw.values[0] || [], rows: raw.values.slice(1) || [] };
   } else if (Array.isArray(raw)) {
     // Düz array: ilk eleman header
-    const [headers, ...rows] = raw;
-    d = { headers: headers || [], rows: rows || [] };
+    d = { headers: raw[0] || [], rows: raw.slice(1) || [] };
   } else {
     d = { headers: [], rows: [] };
   }
@@ -867,9 +878,9 @@ async function deleteRow(sheetName, rowIndex) {
   return r.json();
 }
 
-/* ═══════════════════════════════════════════════════════════════
+/* ===============================================================
    VERİ İŞLEME
-═══════════════════════════════════════════════════════════════ */
+=============================================================== */
 function parsePlayRows(headers, rows) {
   const h = headers.map(x => x.trim().toLowerCase());
   const iO = h.findIndex(v => v.startsWith('oyun'));
@@ -978,9 +989,9 @@ const PALETTE = [
   '#a93226','#1e8bc3','#196f3d','#784212','#154360'
 ];
 
-/* ═══════════════════════════════════════════════════════════════
+/* ===============================================================
    ROUTER
-═══════════════════════════════════════════════════════════════ */
+=============================================================== */
 let currentPage = '';
 let chartInstances = {};
 
@@ -1015,9 +1026,9 @@ function navigateTo(page, params) {
   if (pages[page]) pages[page](params || {});
 }
 
-/* ═══════════════════════════════════════════════════════════════
+/* ===============================================================
    ANA PANEL (home)
-═══════════════════════════════════════════════════════════════ */
+=============================================================== */
 async function renderHome(params) {
   const pg = document.getElementById('page');
   try {
@@ -1202,9 +1213,9 @@ async function renderHome(params) {
   }
 }
 
-/* ═══════════════════════════════════════════════════════════════
+/* ===============================================================
    PERSONEL LİSTESİ (oyunlar)
-═══════════════════════════════════════════════════════════════ */
+=============================================================== */
 async function renderOyunlar(params) {
   const pg = document.getElementById('page');
   try {
@@ -1392,9 +1403,9 @@ async function renderOyunlar(params) {
   }
 }
 
-/* ═══════════════════════════════════════════════════════════════
+/* ===============================================================
    SORGULAMA
-═══════════════════════════════════════════════════════════════ */
+=============================================================== */
 async function renderSorgulama() {
   const pg = document.getElementById('page');
   try {
@@ -1664,9 +1675,9 @@ async function renderSorgulama() {
   }
 }
 
-/* ═══════════════════════════════════════════════════════════════
+/* ===============================================================
    PERSONEL DAĞILIMI (dagilim)
-═══════════════════════════════════════════════════════════════ */
+=============================================================== */
 async function renderDagilim(params) {
   const pg = document.getElementById('page');
   try {
@@ -1847,16 +1858,14 @@ async function renderDagilim(params) {
   }
 }
 
-/* ═══════════════════════════════════════════════════════════════
+/* ===============================================================
    FIGÜRANLAR
-═══════════════════════════════════════════════════════════════ */
+=============================================================== */
 async function renderFiguran() {
   const pg = document.getElementById('page');
   try {
-    const [figuranData, oyunlarData] = await Promise.all([
-      fetchSheet('FİGÜRAN LİSTESİ'),
-      fetchSheet('BÜTÜN OYUNLAR')
-    ]);
+    var ___results = await Promise.all([fetchSheet('FİGÜRAN LİSTESİ'),fetchSheet('BÜTÜN OYUNLAR')]);
+    var figuranData=___results[0], oyunlarData=___results[1];
     const oyunRows = parsePlayRows(oyunlarData.headers, oyunlarData.rows).filter(r=>isFiguran(r.kategori));
     const listeRows = figuranData.rows || [];
     const listeHeaders = figuranData.headers || [];
@@ -1953,9 +1962,9 @@ async function renderFiguran() {
   }
 }
 
-/* ═══════════════════════════════════════════════════════════════
+/* ===============================================================
    GRAFİKLER
-═══════════════════════════════════════════════════════════════ */
+=============================================================== */
 async function renderGrafik() {
   const pg = document.getElementById('page');
   try {
@@ -2021,7 +2030,9 @@ async function renderGrafik() {
             <h3 style="font-size:13px;font-weight:700;margin-bottom:4px;">En Çok Oyuna Katılan 25 Kişi</h3>
             <p style="font-size:11px;color:var(--muted-fg);margin-bottom:14px;">Çubuğa tıklayarak personel dağılımına gidin</p>
             <div style="overflow-x:auto;">
-              <canvas id="chart-kisi" style="max-height:580px;"></canvas>
+            <div id="chart-kisi-wrap" style="position:relative;width:100%;height:600px;">
+              <canvas id="chart-kisi"></canvas>
+            </div>
             </div>
           </div>`:''}
 
@@ -2036,7 +2047,9 @@ async function renderGrafik() {
               <p style="font-size:11px;color:var(--muted-fg);">Tıklayarak oyuna gidin</p>
             </div>
             <div style="overflow-x:auto;">
-              <canvas id="chart-oyun" style="max-height:540px;"></canvas>
+            <div id="chart-oyun-wrap" style="position:relative;width:100%;height:560px;">
+              <canvas id="chart-oyun"></canvas>
+            </div>
             </div>
           </div>`:''}
 
@@ -2079,16 +2092,16 @@ async function renderGrafik() {
         </div>`;
 
       // Chart.js render
-      requestAnimationFrame(() => {
+      setTimeout(() => {
         if (activeChart==='kisi') {
           const canvas = document.getElementById('chart-kisi');
+          if (!canvas || !window.Chart) return;
           if (!canvas) return;
-          canvas.height = Math.max(topKisi.length * 22, 200);
           chartInstances['kisi'] = new Chart(canvas, {
             type:'bar',
             data:{
               labels:topKisi.map(d=>d.name),
-              datasets:[{data:topKisi.map(d=>d.value),backgroundColor:topKisi.map((_,i)=>PALETTE[i%PALETTE.length]+'DD'),borderRadius:4}]
+              datasets:[{data:topKisi.map(d=>d.value),backgroundColor:topKisi.map((_,i)=>PALETTE[i%PALETTE.length]+'DD'),borderRadius:4,barThickness:14}]
             },
             options:{
               indexAxis:'y',responsive:true,maintainAspectRatio:false,
@@ -2102,14 +2115,14 @@ async function renderGrafik() {
         }
         if (activeChart==='oyun') {
           const canvas = document.getElementById('chart-oyun');
+          if (!canvas || !window.Chart) return;
           if (!canvas) return;
           const src = oyunSubTab==='buyuk'?oyunBuyuk:oyunKucuk;
-          canvas.height = Math.max(src.length * 22, 200);
           chartInstances['oyun'] = new Chart(canvas, {
             type:'bar',
             data:{
               labels:src.map(d=>d.name),
-              datasets:[{data:src.map(d=>d.value),backgroundColor:src.map((_,i)=>PALETTE[i%PALETTE.length]+'DD'),borderRadius:4}]
+              datasets:[{data:src.map(d=>d.value),backgroundColor:src.map((_,i)=>PALETTE[i%PALETTE.length]+'DD'),borderRadius:4,barThickness:14}]
             },
             options:{
               indexAxis:'y',responsive:true,maintainAspectRatio:false,
@@ -2123,6 +2136,7 @@ async function renderGrafik() {
         }
         if (activeChart==='kategori') {
           const canvas = document.getElementById('chart-kat');
+          if (!canvas || !window.Chart) return;
           if (!canvas) return;
           chartInstances['kat'] = new Chart(canvas, {
             type:'doughnut',
@@ -2163,9 +2177,9 @@ async function renderGrafik() {
   }
 }
 
-/* ═══════════════════════════════════════════════════════════════
+/* ===============================================================
    MÜSAİT PERSONEL (gorevli-olmayan)
-═══════════════════════════════════════════════════════════════ */
+=============================================================== */
 async function renderMusait() {
   const SHEET = 'GÖREVLİ OLMAYAN';
   const DEFAULT_HEADERS = ['Kişi','Kategori','Başlangıç','Bitiş','Açıklama'];
@@ -2308,9 +2322,9 @@ async function renderMusait() {
   }
 }
 
-/* ═══════════════════════════════════════════════════════════════
+/* ===============================================================
    ARŞİV OYUNLAR
-═══════════════════════════════════════════════════════════════ */
+=============================================================== */
 async function renderArsiv() {
   const SHEET = 'ARŞİV OYUNLAR';
   const pg = document.getElementById('page');
@@ -2476,9 +2490,9 @@ async function renderArsiv() {
 }
 
 
-/* ═══════════════════════════════════════════════════════════════
+/* ===============================================================
    ADMİN PANELİ
-═══════════════════════════════════════════════════════════════ */
+=============================================================== */
 async function renderAdmin() {
   const pg = document.getElementById('page');
   const ROWS_PER_PAGE = 50;
@@ -2753,7 +2767,7 @@ async function renderAdmin() {
   window.adminAddKey = (e,i,total) => {
     if(e.key==='Tab'){e.preventDefault();const n=e.shiftKey?i-1:i+1;if(n>=0&&n<total)document.getElementById('new-row-'+n)?.focus();else if(n>=total)adminAddSave(total);}
     if(e.key==='Enter'){if(i<total-1)document.getElementById('new-row-'+(i+1))?.focus();else adminAddSave(total);}
-    if(e.key==='Escape'){Array.from({length:total},(_,j)=>document.getElementById('new-row-'+j)?.value='');}
+    if(e.key==='Escape'){for(var _j=0;_j<total;_j++){var _inp=document.getElementById('new-row-'+_j);if(_inp)_inp.value='';}}
   };
   window.adminAddSave = async total => {
     const vals=Array.from({length:total},(_,i)=>document.getElementById('new-row-'+i)?.value||'');
@@ -2786,9 +2800,421 @@ async function renderAdmin() {
   render();
 }
 
-/* ═══════════════════════════════════════════════════════════════
+
+/* ===============================================================
+   BİLDİRİM SİSTEMİ
+=============================================================== */
+const NOTIF_SEEN_KEY = 'notif_seen_ids';
+const NOTIF_SHEET = 'BİLDİRİMLER';
+let notifOpen = false;
+let notifData = null;
+let notifSeenIds = new Set();
+
+function getSeenIds() {
+  try { const r=localStorage.getItem(NOTIF_SEEN_KEY); return new Set(r?JSON.parse(r):[]); } catch{return new Set();}
+}
+function saveSeenIds(ids) {
+  try { localStorage.setItem(NOTIF_SEEN_KEY, JSON.stringify([...ids])); } catch{}
+}
+
+function notifTypeBadge(type) {
+  const t=(type||'').trim().toUpperCase();
+  if(t==='EKLENDİ'||t==='EKLENDI') return {label:'EKLENDİ',color:'#166534',bg:'#dcfce7'};
+  if(t==='SİLİNDİ'||t==='SILINDI') return {label:'SİLİNDİ',color:'#b91c1c',bg:'#fee2e2'};
+  if(t==='GÜNCELLENDİ'||t==='GUNCELLENDI') return {label:'GÜNCELLENDİ',color:'#92400e',bg:'#fef3c7'};
+  if(t==='BİLGİ'||t==='BILGI') return {label:'BİLGİ',color:'#1d4ed8',bg:'#dbeafe'};
+  if(t==='ARŞİVLENDİ'||t==='ARSIVLENDI') return {label:'ARŞİVLENDİ',color:'#475569',bg:'#f1f5f9'};
+  return {label:t||'—',color:'#475569',bg:'#f1f5f9'};
+}
+
+async function loadNotifs() {
+  try {
+    notifData = await fetchSheet(NOTIF_SHEET);
+    notifSeenIds = getSeenIds();
+    updateNotifDot();
+  } catch(e) { notifData = {headers:[],rows:[]}; }
+}
+
+function getUnreadCount() {
+  if(!notifData) return 0;
+  return notifData.rows.filter((_,i)=>!notifSeenIds.has(String(i))).length;
+}
+
+function updateNotifDot() {
+  const dot = document.getElementById('notif-dot');
+  if(!dot) return;
+  const count = getUnreadCount();
+  dot.style.display = count>0 ? 'block' : 'none';
+}
+
+function toggleNotif() {
+  notifOpen = !notifOpen;
+  if(notifOpen) {
+    loadNotifs().then(renderNotifPanel);
+  } else {
+    document.getElementById('notif-panel')?.remove();
+  }
+}
+
+function markAllNotifSeen() {
+  if(!notifData) return;
+  const ids = new Set(notifData.rows.map((_,i)=>String(i)));
+  notifSeenIds = ids;
+  saveSeenIds(ids);
+  updateNotifDot();
+}
+
+function renderNotifPanel() {
+  document.getElementById('notif-panel')?.remove();
+  const rows = notifData ? [...notifData.rows].reverse() : [];
+  const total = notifData?.rows?.length || 0;
+
+  // Tümünü okundu say
+  markAllNotifSeen();
+
+  const panel = document.createElement('div');
+  panel.id = 'notif-panel';
+  panel.style.cssText = 'position:fixed;right:12px;top:68px;z-index:500;width:360px;max-width:calc(100vw - 24px);max-height:520px;background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,0.18);';
+
+  panel.innerHTML = `
+    <div style="background:var(--sidebar);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;border-bottom:1px solid var(--sidebar-border);">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="font-size:13px;">🔔</span>
+        <span style="font-size:12px;font-weight:700;color:var(--sidebar-fg);">BİLDİRİMLER</span>
+        ${total>0?`<span style="font-size:10px;font-weight:700;padding:1px 7px;border-radius:10px;background:hsla(42,92%,50%,0.2);color:var(--sidebar-primary);">${total}</span>`:''}
+      </div>
+      <div style="display:flex;align-items:center;gap:4px;">
+        ${total>0?`<button onclick="notifClearConfirm()" style="padding:5px;border-radius:6px;color:hsla(38,35%,92%,0.55);font-size:10px;font-weight:700;" title="Tümünü temizle">🗑</button>`:''}
+        <button onclick="notifRefresh()" style="padding:5px;border-radius:6px;color:hsla(38,35%,92%,0.55);" title="Yenile">↻</button>
+        <button onclick="closeNotif()" style="padding:5px;border-radius:6px;color:hsla(38,35%,92%,0.55);">✕</button>
+      </div>
+    </div>
+    <div id="notif-confirm-clear" style="display:none;padding:8px 14px;background:hsla(0,65%,50%,0.05);border-bottom:1px solid var(--border);flex-shrink:0;">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="font-size:12px;flex:1;">${total} bildirimi sil?</span>
+        <button onclick="notifDoClear()" style="padding:3px 10px;background:#dc2626;color:#fff;border-radius:5px;font-size:11px;font-weight:700;">Evet</button>
+        <button onclick="document.getElementById('notif-confirm-clear').style.display='none'" style="padding:3px 8px;border:1px solid var(--border);border-radius:5px;font-size:11px;">İptal</button>
+      </div>
+    </div>
+    <div style="flex:1;overflow-y:auto;" id="notif-list">
+      ${rows.length===0?`<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:120px;color:var(--muted-fg);gap:8px;"><span style="font-size:28px;opacity:0.2;">🔔</span><p style="font-size:13px;">Bildirim yok</p></div>`:''}
+      ${rows.map((row,i)=>{
+        var tarih=row[0],tur=row[1],oyun=row[2],kisi=row[3],gorev=row[4],aciklama=row[5];
+        const badge=notifTypeBadge(String(tur||''));
+        const oyunStr=String(oyun||'').trim();
+        const kisiStr=String(kisi||'').trim();
+        const gorevStr=String(gorev||'').trim();
+        const aciklamaStr=String(aciklama||'').trim();
+        const isGeneric=aciklamaStr==='Web uygulamasından'||aciklamaStr==='Web uygulamasından eklendi';
+        const origIdx=total-1-i;
+        return `<div style="padding:10px 14px;border-bottom:1px solid hsla(38,18%,87%,0.4);" class="notif-item">
+          <div style="display:flex;align-items:flex-start;gap:8px;">
+            <span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;background:${badge.bg};color:${badge.color};white-space:nowrap;flex-shrink:0;margin-top:2px;">${escHtml(badge.label)}</span>
+            <div style="flex:1;min-width:0;">
+              ${oyunStr?`<p style="font-size:11px;font-weight:700;line-height:1.3;">${escHtml(oyunStr)}</p>`:''}
+              ${kisiStr?`<p style="font-size:11px;color:var(--foreground);opacity:0.8;line-height:1.3;">${escHtml(kisiStr)}${gorevStr?` <span style="color:var(--muted-fg);font-weight:400;">· ${escHtml(gorevStr)}</span>`:''}</p>`:''}
+              ${!kisiStr&&gorevStr?`<p style="font-size:11px;color:var(--muted-fg);">${escHtml(gorevStr)}</p>`:''}
+              ${aciklamaStr&&!isGeneric?`<p style="font-size:10px;color:var(--muted-fg);opacity:0.8;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(aciklamaStr)}</p>`:''}
+              ${tarih?`<p style="font-size:9px;color:var(--muted-fg);opacity:0.4;margin-top:3px;">${escHtml(String(tarih))}</p>`:''}
+            </div>
+            <button onclick="notifDeleteRow(${origIdx})" style="padding:3px;border-radius:4px;color:var(--muted-fg);opacity:0;flex-shrink:0;" class="notif-del-btn" title="Sil">🗑</button>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`;
+
+  // Hover efekti için CSS
+  const style = document.createElement('style');
+  style.textContent = '.notif-item:hover .notif-del-btn{opacity:1!important} .notif-item:hover{background:hsla(38,18%,92%,0.3);}';
+  panel.appendChild(style);
+
+  document.body.appendChild(panel);
+
+  // Dışarı tıklayınca kapat
+  setTimeout(() => {
+    document.addEventListener('click', notifOutsideClick);
+  }, 100);
+}
+
+function notifOutsideClick(e) {
+  const panel = document.getElementById('notif-panel');
+  const btn = document.getElementById('notif-btn');
+  if(panel && !panel.contains(e.target) && !btn.contains(e.target)) {
+    closeNotif();
+  }
+}
+
+function closeNotif() {
+  notifOpen = false;
+  document.getElementById('notif-panel')?.remove();
+  document.removeEventListener('click', notifOutsideClick);
+}
+
+function notifRefresh() {
+  delete CACHE[NOTIF_SHEET];
+  loadNotifs().then(renderNotifPanel);
+}
+
+function notifClearConfirm() {
+  const el = document.getElementById('notif-confirm-clear');
+  if(el) el.style.display = el.style.display==='none'?'flex':'none';
+}
+
+async function notifDoClear() {
+  try {
+    const r = await fetch(BACKEND+'/api/notifications', {method:'DELETE'});
+    if(!r.ok) throw new Error();
+    delete CACHE[NOTIF_SHEET];
+    await loadNotifs();
+    renderNotifPanel();
+  } catch(e) { alert('Silinemedi'); }
+}
+
+async function notifDeleteRow(sheetIdx) {
+  try {
+    await deleteRow(NOTIF_SHEET, sheetIdx);
+    await loadNotifs();
+    renderNotifPanel();
+  } catch(e) { alert('Silinemedi'); }
+}
+
+/* ===============================================================
+   ÇAKIŞMA KONTROLÜ
+=============================================================== */
+async function renderCakisma() {
+  const pg = document.getElementById('page');
+  try {
+    const data = await fetchSheet('BÜTÜN OYUNLAR');
+    const allRows = parsePlayRows(data.headers, data.rows);
+    const allPeople = [...new Set(allRows.flatMap(r=>r.kisi.split(',').map(k=>k.trim()).filter(Boolean)))].sort((a,b)=>a.localeCompare(b,'tr'));
+
+    let personA='', personB='';
+
+    function getResult() {
+      if(!personA||!personB) return null;
+      const setA = new Set(allRows.filter(r=>r.kisi.split(',').some(k=>k.trim()===personA)).map(r=>r.oyun));
+      const setB = new Set(allRows.filter(r=>r.kisi.split(',').some(k=>k.trim()===personB)).map(r=>r.oyun));
+      const onlyA=[...setA].filter(p=>!setB.has(p)).sort((a,b)=>a.localeCompare(b,'tr'));
+      const onlyB=[...setB].filter(p=>!setA.has(p)).sort((a,b)=>a.localeCompare(b,'tr'));
+      const common=[...setA].filter(p=>setB.has(p)).sort((a,b)=>a.localeCompare(b,'tr'));
+      return {onlyA,onlyB,common,totalA:setA.size,totalB:setB.size};
+    }
+
+    function renderPage() {
+      const result = getResult();
+      const total = result ? result.onlyA.length+result.common.length+result.onlyB.length : 0;
+      const overlapRatio = result && total>0 ? result.common.length/total : 0;
+      const r=110, W=600, H=220, cx=W/2, cy=H/2;
+      const offset = r*(0.5+(1-overlapRatio)*0.45);
+      const cxA=cx-offset*0.65, cxB=cx+offset*0.65;
+
+      pg.innerHTML = `
+        <div style="flex:1;overflow-y:auto;">
+        <div class="scroll-page">
+          <div class="page-header">
+            <h2>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M6 21V9a9 9 0 0 0 9 9"/></svg>
+              Oyun Çakışması Kontrolü
+            </h2>
+            <p>İki kişiyi seçerek hangi oyunlarda birlikte veya ayrı görev aldıklarını görün</p>
+          </div>
+
+          <div class="card" style="padding:16px;">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+              <div>
+                <label style="display:block;font-size:11px;font-weight:700;color:hsl(220,80%,45%);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">KİŞİ A</label>
+                <div style="position:relative;">
+                  <div class="search-wrap">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <input type="text" id="cakisma-a" placeholder="Kişi ara..." value="${escHtml(personA)}" oninput="cakismaAC('A',this.value)" onfocus="cakismaACOpen('A')" autocomplete="off" style="${personA?'border-color:hsl(220,80%,45%);':''}">
+                  </div>
+                  <div id="ac-cakisma-A" class="ac-dropdown" style="display:none;"></div>
+                </div>
+              </div>
+              <div>
+                <label style="display:block;font-size:11px;font-weight:700;color:hsl(340,75%,45%);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">KİŞİ B</label>
+                <div style="position:relative;">
+                  <div class="search-wrap">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <input type="text" id="cakisma-b" placeholder="Kişi ara..." value="${escHtml(personB)}" oninput="cakismaAC('B',this.value)" onfocus="cakismaACOpen('B')" autocomplete="off" style="${personB?'border-color:hsl(340,75%,45%);':''}">
+                  </div>
+                  <div id="ac-cakisma-B" class="ac-dropdown" style="display:none;"></div>
+                </div>
+              </div>
+            </div>
+            ${(personA||personB)?`<button onclick="cakismaTemizle()" style="margin-top:10px;font-size:12px;color:var(--muted-fg);">✕ Temizle</button>`:''}
+          </div>
+
+          ${!personA||!personB?`<div class="empty">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:32px;height:32px;opacity:0.3;"><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M6 21V9a9 9 0 0 0 9 9"/></svg>
+            <p>İki kişi seçin</p>
+            <div class="sub">Venn diyagramı ve oyun listesi görünecek</div>
+          </div>` : result ? `
+          <div class="card" style="padding:16px;">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:8px;">
+              <p style="font-size:11px;font-weight:700;color:hsl(220,80%,45%);flex:1;">${escHtml(personA)}</p>
+              <p style="font-size:11px;font-weight:700;color:hsl(340,75%,45%);flex:1;text-align:right;">${escHtml(personB)}</p>
+            </div>
+            <svg viewBox="0 0 ${W} ${H}" style="width:100%;max-width:560px;display:block;margin:0 auto;">
+              <circle cx="${cxA}" cy="${cy}" r="${r}" fill="hsl(220,80%,58%,0.18)" stroke="hsl(220,80%,50%)" stroke-width="1.5"/>
+              <circle cx="${cxB}" cy="${cy}" r="${r}" fill="hsl(340,75%,55%,0.18)" stroke="hsl(340,75%,50%)" stroke-width="1.5"/>
+              <text x="${cxA-offset*0.45}" y="${cy-4}" text-anchor="middle" font-size="28" font-weight="800" fill="hsl(220,80%,40%)">${result.onlyA.length}</text>
+              <text x="${cxA-offset*0.45}" y="${cy+16}" text-anchor="middle" font-size="10" fill="hsl(220,80%,40%)">sadece A</text>
+              <text x="${cx}" y="${cy-4}" text-anchor="middle" font-size="24" font-weight="800" fill="hsl(280,60%,40%)">${result.common.length}</text>
+              <text x="${cx}" y="${cy+16}" text-anchor="middle" font-size="10" fill="hsl(280,60%,40%)">ortak</text>
+              <text x="${cxB+offset*0.45}" y="${cy-4}" text-anchor="middle" font-size="28" font-weight="800" fill="hsl(340,75%,40%)">${result.onlyB.length}</text>
+              <text x="${cxB+offset*0.45}" y="${cy+16}" text-anchor="middle" font-size="10" fill="hsl(340,75%,40%)">sadece B</text>
+              <text x="${cxA-offset*0.45}" y="16" text-anchor="middle" font-size="10" font-weight="600" fill="hsl(220,80%,45%)">${escHtml(personA.length>18?personA.slice(0,16)+'…':personA)}</text>
+              <text x="${cxB+offset*0.45}" y="16" text-anchor="middle" font-size="10" font-weight="600" fill="hsl(340,75%,45%)">${escHtml(personB.length>18?personB.slice(0,16)+'…':personB)}</text>
+            </svg>
+          </div>
+
+          <div class="kesisim-cols">
+            ${[
+              {title:'Sadece '+personA.split(' ')[0],list:result.onlyA,color:'hsl(220,80%,45%)',border:'hsl(220,80%,50%,0.3)',bg:'hsl(220,80%,58%,0.08)'},
+              {title:'Ortak Oyunlar',list:result.common,color:'hsl(var(--sidebar-primary))',border:'hsl(42,92%,50%,0.3)',bg:'hsl(42,92%,50%,0.06)'},
+              {title:'Sadece '+personB.split(' ')[0],list:result.onlyB,color:'hsl(340,75%,45%)',border:'hsl(340,75%,50%,0.3)',bg:'hsl(340,75%,55%,0.08)'}
+            ].map(col=>`<div class="card" style="border-color:${col.border};">
+              <div style="padding:10px 14px;border-bottom:1px solid ${col.border};background:${col.bg};">
+                <p style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:${col.color};">${escHtml(col.title)}</p>
+                <p style="font-size:22px;font-weight:700;color:var(--foreground);margin-top:2px;">${col.list.length}</p>
+              </div>
+              <div style="padding:8px;max-height:240px;overflow-y:auto;">
+                ${col.list.length===0?`<p style="font-size:12px;color:var(--muted-fg);font-style:italic;padding:4px 6px;">Oyun yok</p>`:
+                  col.list.map(o=>`<p style="font-size:11px;font-weight:500;padding:5px 8px;border-radius:5px;cursor:pointer;" onmouseover="this.style.background='hsla(38,18%,92%,0.5)'" onmouseout="this.style.background=''" onclick="navigateTo('home',{oyun:decodeURIComponent('${encodeURIComponent(o)}')})">
+                    ${escHtml(o)}
+                  </p>`).join('')}
+              </div>
+            </div>`).join('')}
+          </div>
+          ` : ''}
+        </div>
+        </div>`;
+
+      // Autocomplete
+      ['A','B'].forEach(side=>{
+        const inputId='cakisma-'+side.toLowerCase();
+        const acId='ac-cakisma-'+side;
+        const inp=document.getElementById(inputId);
+        const ac=document.getElementById(acId);
+        if(!inp||!ac) return;
+        const setup=()=>{
+          const v=inp.value.toLowerCase();
+          const items=v?allPeople.filter(p=>trLower(p).includes(trLower(v))).slice(0,12):allPeople.slice(0,12);
+          ac.style.display=items.length?'block':'none';
+          ac.innerHTML=items.map(p=>`<button class="ac-item" onmousedown="cakismaSelect(${JSON.stringify(side)},${JSON.stringify(p)})">${escHtml(p)}</button>`).join('');
+        };
+        inp.addEventListener('input',setup);
+        inp.addEventListener('focus',setup);
+        inp.addEventListener('blur',()=>setTimeout(()=>{ac.style.display='none';},200));
+      });
+    }
+
+    window.cakismaAC = (side,val) => { if(side==='A') personA=val; else personB=val; };
+    window.cakismaACOpen = () => {};
+    window.cakismaSelect = (side,name) => {
+      if(side==='A'){personA=name;const i=document.getElementById('cakisma-a');if(i)i.value=name;}
+      else{personB=name;const i=document.getElementById('cakisma-b');if(i)i.value=name;}
+      renderPage();
+    };
+    window.cakismaTemizle = () => { personA=personB=''; renderPage(); };
+
+    renderPage();
+  } catch(e) {
+    pg.innerHTML = `<div class="empty"><p>Veri yüklenemedi: ${e.message}</p></div>`;
+  }
+}
+
+/* ===============================================================
+   BİLDİRİMLER SAYFASI
+=============================================================== */
+async function renderBildirimler() {
+  const pg = document.getElementById('page');
+  let tab = 'active';
+  let search = '';
+  let activeData = null, arsivData = null;
+
+  async function loadAll() {
+    [activeData, arsivData] = await Promise.all([
+      fetchSheet('BİLDİRİMLER').catch(()=>({headers:[],rows:[]})),
+      fetchSheet('BİLDİRİMLER_ARŞİV').catch(()=>({headers:[],rows:[]}))
+    ]);
+  }
+
+  function getData() { return tab==='active'?activeData:arsivData; }
+
+  function getFiltered() {
+    const d=getData();
+    if(!d) return [];
+    if(!search.trim()) return d.rows;
+    const lower=trLower(search);
+    return d.rows.filter(row=>row.some(c=>trLower(String(c??'')).includes(lower)));
+  }
+
+  function render() {
+    const filtered=getFiltered();
+    const headers=getData()?.headers||[];
+    const activeCount=activeData?.rows?.length||0;
+    const arsivCount=arsivData?.rows?.length||0;
+
+    pg.innerHTML = `
+      <div style="flex:1;overflow-y:auto;">
+      <div class="scroll-page">
+        <div class="page-header">
+          <h2>🔔 Bildirimler</h2>
+          <p>BİLDİRİMLER ve BİLDİRİMLER_ARŞİV sayfasındaki kayıtlar</p>
+        </div>
+
+        <div class="tab-bar">
+          <button class="tab-btn${tab==='active'?' active':''}" onclick="bildirimlerTab('active')">
+            🔔 Aktif Bildirimler
+            <span style="padding:1px 6px;border-radius:8px;background:var(--muted);font-size:10px;">${activeCount}</span>
+          </button>
+          <button class="tab-btn${tab==='arsiv'?' active':''}" onclick="bildirimlerTab('arsiv')">
+            📁 Arşiv
+            <span style="padding:1px 6px;border-radius:8px;background:var(--muted);font-size:10px;">${arsivCount}</span>
+          </button>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div class="search-wrap" style="flex:1;min-width:180px;max-width:300px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" placeholder="Ara..." value="${escHtml(search)}" oninput="bildirimlerSearch(this.value)">
+          </div>
+          <span style="font-size:12px;color:var(--muted-fg);margin-left:auto;">${filtered.length} kayıt</span>
+        </div>
+
+        <div class="card">
+          ${headers.length===0?`<div class="empty"><p>Bu sayfada bildirim yok</p></div>`:
+          `<div class="tbl-wrap"><table>
+            <thead><tr>
+              <th style="width:36px;">#</th>
+              ${headers.map(h=>`<th>${escHtml(h)}</th>`).join('')}
+            </tr></thead>
+            <tbody>
+              ${filtered.length===0?`<tr><td colspan="${headers.length+1}" style="text-align:center;padding:32px;color:var(--muted-fg);">Sonuç bulunamadı</td></tr>`:''}
+              ${filtered.map((row,i)=>`<tr>
+                <td style="color:var(--muted-fg);font-size:11px;">${i+1}</td>
+                ${headers.map((_,ci)=>`<td>${escHtml(String(row[ci]??''))}</td>`).join('')}
+              </tr>`).join('')}
+            </tbody>
+          </table></div>`}
+        </div>
+      </div>
+      </div>`;
+  }
+
+  window.bildirimlerTab = t => { tab=t; render(); };
+  window.bildirimlerSearch = v => { search=v; render(); };
+
+  try { await loadAll(); render(); } catch(e) {
+    pg.innerHTML = `<div class="empty"><p>Veri yüklenemedi: ${e.message}</p></div>`;
+  }
+}
+
+/* ===============================================================
    UI BAŞLAT
-═══════════════════════════════════════════════════════════════ */
+=============================================================== */
 document.addEventListener('DOMContentLoaded', () => {
   // Hamburger
   document.getElementById('hamburger').addEventListener('click', () => {
@@ -2802,6 +3228,8 @@ document.addEventListener('DOMContentLoaded', () => {
     themeBtn.textContent = document.documentElement.classList.contains('dark') ? '☀️' : '🌙';
   });
 
+  // Bildirimleri yükle
+  loadNotifs();
   // İlk sayfa
   navigateTo('home');
 });
