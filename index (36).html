@@ -1,0 +1,2810 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>İzmir Devlet Tiyatrosu</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <!-- Chart.js (grafikler için) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <style>
+/* ═══════════════════════════════════════════════════════════════
+   TEMA & CSS DEĞİŞKENLERİ
+═══════════════════════════════════════════════════════════════ */
+:root {
+  --background: hsl(38,28%,96%);
+  --foreground: hsl(350,35%,8%);
+  --border: hsl(38,18%,87%);
+  --card: hsl(38,20%,99%);
+  --card-border: hsl(38,18%,91%);
+  --sidebar: hsl(350,55%,9%);
+  --sidebar-fg: hsl(38,35%,92%);
+  --sidebar-border: hsl(350,45%,15%);
+  --sidebar-primary: hsl(42,92%,50%);
+  --sidebar-primary-fg: hsl(350,55%,8%);
+  --sidebar-accent: hsl(350,45%,15%);
+  --muted: hsl(38,18%,92%);
+  --muted-fg: hsl(38,10%,42%);
+  --primary: hsl(350,68%,40%);
+  --primary-fg: #fff;
+  --input-bg: hsl(38,18%,82%);
+  --radius: 0.5rem;
+  --shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   RESET & BASE
+═══════════════════════════════════════════════════════════════ */
+*,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+html,body { height:100%; }
+body {
+  font-family: Inter, sans-serif;
+  background: var(--background);
+  color: var(--foreground);
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+}
+button { cursor:pointer; border:none; background:none; font-family:inherit; }
+input { font-family:inherit; }
+a { text-decoration:none; color:inherit; }
+
+/* ═══════════════════════════════════════════════════════════════
+   LAYOUT
+═══════════════════════════════════════════════════════════════ */
+#app { display:flex; flex-direction:column; height:100vh; overflow:hidden; }
+
+/* Header */
+#header {
+  background: var(--sidebar);
+  border-bottom: 1px solid var(--sidebar-border);
+  flex-shrink: 0;
+  z-index: 100;
+}
+.header-inner {
+  display: flex;
+  flex-direction: column;
+}
+.header-brand-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px 6px;
+}
+.brand-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.brand-logo {
+  width: 34px; height: 34px;
+  background: var(--sidebar-primary);
+  border-radius: 8px;
+  display: flex; align-items:center; justify-content:center;
+  font-size: 14px; font-weight: 900;
+  color: var(--sidebar-primary-fg);
+  flex-shrink: 0;
+}
+.brand-title {
+  font-size: 13px; font-weight: 700;
+  color: var(--sidebar-fg);
+  letter-spacing: 0.2px;
+}
+.brand-sub {
+  font-size: 9.5px; text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: hsl(38,35%,92%,0.55);
+  margin-top: 1px;
+}
+.header-right { display:flex; align-items:center; gap:8px; }
+
+/* Nav */
+.nav-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px;
+  padding: 0 16px 8px;
+}
+.nav-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border-radius: 7px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: hsla(38,35%,92%,0.70);
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+.nav-pill:hover { background: var(--sidebar-accent); color:var(--sidebar-fg); }
+.nav-pill.active { background: var(--sidebar-primary); color: var(--sidebar-primary-fg); }
+.nav-pill svg { width:14px;height:14px;flex-shrink:0; }
+
+/* Mobile hamburger */
+.hamburger {
+  width:32px;height:32px;
+  border-radius:7px;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--sidebar-accent);
+  color:hsla(38,35%,92%,0.75);
+  display:none;
+}
+@media(max-width:900px){
+  .hamburger { display:flex; }
+  .nav-row { display:none; }
+  .nav-row.open { display:flex; flex-direction:column; align-items:flex-start; }
+}
+
+/* Dark mode toggle */
+.theme-btn {
+  width:32px;height:32px;
+  border-radius:7px;
+  background:var(--sidebar-accent);
+  color:hsla(38,35%,92%,0.75);
+  display:flex;align-items:center;justify-content:center;
+  font-size:15px;
+}
+
+/* Page content */
+#page { flex:1; overflow:hidden; display:flex; flex-direction:column; }
+
+/* ═══════════════════════════════════════════════════════════════
+   SPLIT PANEL (home, oyunlar)
+═══════════════════════════════════════════════════════════════ */
+.split {
+  display:flex;
+  flex:1;
+  overflow:hidden;
+}
+.split-left {
+  width:272px;
+  flex-shrink:0;
+  border-right:1px solid var(--border);
+  background:var(--card);
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+}
+.split-right {
+  flex:1;
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+  background:var(--background);
+  min-width:0;
+}
+@media(max-width:700px){
+  .split-left { width:100%; }
+  .split-right { display:none; }
+  .split-left.hidden-mobile { display:none; }
+  .split-right.show-mobile { display:flex; width:100%; }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   BILEŞENLER
+═══════════════════════════════════════════════════════════════ */
+/* Search input */
+.search-wrap {
+  position:relative;
+}
+.search-wrap svg {
+  position:absolute;left:10px;top:50%;transform:translateY(-50%);
+  width:14px;height:14px;
+  color:var(--muted-fg);
+  pointer-events:none;
+}
+.search-wrap input {
+  width:100%;
+  height:32px;
+  padding:0 28px 0 32px;
+  border:1px solid var(--border);
+  border-radius:7px;
+  background:var(--background);
+  color:var(--foreground);
+  font-size:12px;
+  outline:none;
+  transition:border-color 0.15s;
+}
+.search-wrap input:focus { border-color:var(--primary); }
+.search-wrap .clear-btn {
+  position:absolute;right:8px;top:50%;transform:translateY(-50%);
+  color:var(--muted-fg);
+  width:14px;height:14px;
+  display:none;
+}
+.search-wrap input:not(:placeholder-shown) ~ .clear-btn { display:block; }
+
+/* Filter chips */
+.chip-row {
+  display:flex;
+  flex-wrap:wrap;
+  gap:4px;
+  margin-top:6px;
+}
+.chip {
+  padding:2px 8px;
+  border-radius:5px;
+  font-size:10px;
+  font-weight:700;
+  background:hsla(38,18%,92%,0.5);
+  color:var(--muted-fg);
+  transition:all 0.15s;
+}
+.chip.active { background:var(--sidebar); color:var(--sidebar-primary); }
+
+/* List item */
+.list-item {
+  width:100%;
+  text-align:left;
+  padding:9px 12px;
+  border-bottom:1px solid hsla(38,18%,87%,0.5);
+  display:flex;
+  align-items:center;
+  gap:8px;
+  background:transparent;
+  transition:background 0.1s;
+}
+.list-item:hover { background:var(--muted); }
+.list-item.active { background:var(--sidebar); }
+.list-item.active .item-name { color:var(--sidebar-fg); }
+.list-item.active .item-sub { color:hsla(38,35%,92%,0.65); }
+.list-item .item-icon {
+  width:14px;height:14px;flex-shrink:0;
+  color:var(--muted-fg);
+}
+.list-item.active .item-icon { color:var(--sidebar-primary); }
+.item-name {
+  font-size:12px;font-weight:600;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.item-sub {
+  font-size:10px;color:var(--muted-fg);margin-top:1px;
+  display:flex;gap:8px;
+}
+.pasif-badge {
+  font-size:9px;font-weight:700;
+  padding:0 4px;border-radius:3px;
+  background:hsl(0,70%,90%);color:hsl(0,65%,40%);
+  flex-shrink:0;
+}
+.list-item.pasif { background:hsla(38,18%,92%,0.4); opacity:0.75; }
+
+/* Detail panel */
+.detail-header {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:10px 16px;
+  border-bottom:1px solid var(--border);
+  background:var(--card);
+  flex-shrink:0;
+}
+.detail-header h2 { font-size:14px;font-weight:700; }
+.detail-header .sub { font-size:11px;color:var(--muted-fg);margin-top:1px; }
+.back-btn {
+  padding:4px;border-radius:6px;
+  color:var(--muted-fg);
+  transition:background 0.1s;
+}
+.back-btn:hover { background:var(--muted); }
+.detail-body {
+  flex:1;overflow-y:auto;
+  padding:12px;
+  display:flex;flex-direction:column;gap:10px;
+}
+
+/* Kategori grup */
+.kat-group {
+  border:1px solid var(--border);
+  border-radius:10px;
+  overflow:hidden;
+  background:var(--card);
+}
+.kat-group-header {
+  display:flex;align-items:center;gap:8px;
+  padding:7px 12px;
+  border-bottom:1px solid var(--border);
+  background:hsla(350,55%,9%,0.06);
+}
+.kat-group-body { padding:8px 12px;display:flex;flex-direction:column;gap:4px; }
+.kat-row { display:flex;align-items:flex-start;gap:8px;padding:3px 0; }
+.kat-row .name {
+  font-size:12px;font-weight:600;
+  cursor:pointer;
+}
+.kat-row .name:hover { text-decoration:underline; }
+.kat-row .gorev { font-size:11px;color:var(--muted-fg);margin-top:1px; }
+
+/* Badges */
+.badge {
+  display:inline-block;
+  padding:2px 6px;
+  border-radius:4px;
+  font-size:10px;font-weight:600;
+  white-space:nowrap;
+}
+.badge-blue  { background:#dbeafe;color:#1d4ed8; }
+.badge-purple{ background:#ede9fe;color:#6d28d9; }
+.badge-green { background:#dcfce7;color:#166534; }
+.badge-orange{ background:#ffedd5;color:#c2410c; }
+.badge-yellow{ background:#fef9c3;color:#854d0e; }
+.badge-red   { background:#fee2e2;color:#b91c1c; }
+.badge-teal  { background:#ccfbf1;color:#0f766e; }
+.badge-pink  { background:#fce7f3;color:#be185d; }
+.badge-indigo{ background:#e0e7ff;color:#3730a3; }
+.badge-cyan  { background:#cffafe;color:#0e7490; }
+.badge-rose  { background:#ffe4e6;color:#be123c; }
+.badge-fuchsia{background:#fae8ff;color:#7e22ce; }
+.badge-amber { background:#fef3c7;color:#92400e; }
+.badge-gray  { background:#f1f5f9;color:#475569; }
+.badge-turne { background:#dbeafe;color:#1e40af; }
+
+/* Empty state */
+.empty {
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:48px 16px;
+  color:var(--muted-fg);
+  text-align:center;
+  gap:8px;
+}
+.empty svg { width:32px;height:32px;opacity:0.3; }
+.empty p { font-size:13px;font-weight:500; }
+.empty .sub { font-size:11px;opacity:0.7; }
+
+/* Welcome panel */
+.welcome {
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  height:100%;
+  gap:12px;
+  color:var(--muted-fg);
+}
+.welcome-logo {
+  width:60px;height:60px;background:var(--sidebar);
+  border-radius:14px;display:flex;align-items:center;justify-content:center;
+  font-size:18px;font-weight:900;color:var(--sidebar-primary);
+}
+.welcome h3 { font-size:14px;font-weight:600;color:var(--foreground);text-align:center; }
+.welcome p { font-size:12px;text-align:center;line-height:1.5; }
+.stat-pills { display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:4px; }
+.stat-pill {
+  padding:6px 12px;border-radius:8px;
+  background:var(--card);border:1px solid var(--border);
+  font-size:12px;color:var(--muted-fg);
+}
+.stat-pill strong { color:var(--foreground); }
+
+/* ═══════════════════════════════════════════════════════════════
+   SCROLL PANEL (sorgulama, dagilim, grafik, figuran, arsiv, müsait)
+═══════════════════════════════════════════════════════════════ */
+.scroll-page {
+  flex:1;overflow-y:auto;
+  padding:20px;
+  display:flex;flex-direction:column;gap:16px;
+  max-width:900px;
+  width:100%;
+}
+.page-header { margin-bottom:4px; }
+.page-header h2 {
+  font-size:18px;font-weight:800;
+  display:flex;align-items:center;gap:8px;
+}
+.page-header p { font-size:12px;color:var(--muted-fg);margin-top:4px; }
+
+.card {
+  background:var(--card);
+  border:1px solid var(--card-border);
+  border-radius:12px;
+  overflow:hidden;
+}
+.card-header {
+  padding:12px 16px;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.card-header h3 { font-size:13px;font-weight:700; }
+
+/* Tablo */
+.tbl-wrap { overflow-x:auto; }
+table { width:100%;border-collapse:collapse; }
+thead tr {
+  background:var(--sidebar);
+}
+thead th {
+  padding:10px 14px;
+  text-align:left;
+  font-size:10px;font-weight:700;
+  letter-spacing:0.04em;
+  color:var(--sidebar-fg);
+  white-space:nowrap;
+}
+tbody tr {
+  border-top:1px solid hsla(38,18%,87%,0.6);
+  transition:background 0.1s;
+}
+tbody tr:hover { background:hsla(38,18%,92%,0.5); }
+tbody tr:nth-child(even) { background:hsla(38,18%,92%,0.3); }
+tbody tr:hover { background:hsla(38,18%,92%,0.7); }
+td { padding:9px 14px;font-size:12px; }
+
+/* Tab bar */
+.tab-bar {
+  display:flex;
+  background:hsla(38,18%,92%,0.4);
+  border-radius:10px;
+  padding:3px;
+  gap:2px;
+  width:fit-content;
+}
+.tab-btn {
+  padding:7px 14px;
+  border-radius:8px;
+  font-size:11px;font-weight:700;
+  color:var(--muted-fg);
+  display:flex;align-items:center;gap:6px;
+  transition:all 0.15s;
+}
+.tab-btn.active { background:var(--sidebar); color:var(--sidebar-primary); }
+.tab-btn svg { width:13px;height:13px; }
+
+/* Btn */
+.btn {
+  display:inline-flex;align-items:center;gap:6px;
+  padding:6px 12px;
+  border-radius:8px;
+  font-size:12px;font-weight:700;
+  transition:all 0.15s;
+}
+.btn-primary { background:var(--primary);color:var(--primary-fg); }
+.btn-outline {
+  background:var(--card);
+  border:1px solid var(--border);
+  color:var(--muted-fg);
+}
+.btn-outline:hover { background:var(--muted); }
+.btn svg { width:13px;height:13px; }
+
+/* Filter input row */
+.filter-grid {
+  display:grid;grid-template-columns:repeat(3,1fr);gap:12px;
+}
+@media(max-width:600px){ .filter-grid{grid-template-columns:1fr;} }
+.filter-field label {
+  display:block;
+  font-size:11px;font-weight:700;
+  color:var(--muted-fg);
+  margin-bottom:5px;
+}
+.filter-field input {
+  width:100%;height:36px;
+  padding:0 10px 0 32px;
+  border:1px solid var(--border);
+  border-radius:7px;
+  background:var(--background);
+  font-size:12px;
+  outline:none;
+}
+.filter-field input:focus { border-color:var(--primary); }
+.filter-field .field-wrap { position:relative; }
+.filter-field .field-wrap svg {
+  position:absolute;left:10px;top:50%;transform:translateY(-50%);
+  width:13px;height:13px;color:var(--muted-fg);pointer-events:none;
+}
+
+/* Dagilim kart */
+.dagilim-item {
+  background:var(--card);
+  border:1px solid var(--card-border);
+  border-radius:12px;
+  overflow:hidden;
+}
+.dagilim-item.multi { border-left:3px solid var(--sidebar-primary); }
+.dagilim-btn {
+  width:100%;text-align:left;
+  display:flex;align-items:center;gap:12px;
+  padding:12px 16px;
+  transition:background 0.1s;
+}
+.dagilim-btn:hover { background:hsla(38,18%,92%,0.4); }
+.dagilim-count {
+  width:36px;height:36px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-weight:700;font-size:14px;
+  flex-shrink:0;
+}
+.dagilim-count.multi { background:var(--sidebar);color:var(--sidebar-primary); }
+.dagilim-count.single { background:var(--muted);color:var(--muted-fg); }
+.dagilim-expand {
+  border-top:1px solid var(--border);
+  padding:12px 16px;
+  background:hsla(38,18%,92%,0.3);
+}
+.oyun-in-dagilim {
+  display:flex;align-items:center;gap:10px;
+  padding:7px 10px;
+  border-radius:8px;
+  border:1px solid var(--border);
+  background:var(--card);
+  margin-bottom:6px;
+}
+.gorev-tag {
+  padding:2px 8px;border-radius:5px;
+  font-size:10px;font-weight:700;
+  background:var(--sidebar);
+  color:var(--sidebar-primary);
+  border:1px solid hsla(42,92%,50%,0.25);
+}
+
+/* Venn */
+.venn-container { display:flex;justify-content:center;padding:8px; }
+.kesisim-cols {
+  display:grid;grid-template-columns:repeat(3,1fr);gap:12px;
+}
+@media(max-width:600px){ .kesisim-cols{grid-template-columns:1fr;} }
+.kesisim-col { border-radius:12px;overflow:hidden; }
+
+/* Filter drawer */
+.drawer-overlay {
+  position:fixed;inset:0;z-index:200;
+}
+.drawer {
+  position:absolute;right:0;top:0;bottom:0;
+  width:288px;
+  background:var(--card);
+  border-left:1px solid var(--border);
+  box-shadow:-8px 0 32px rgba(0,0,0,0.12);
+  display:flex;flex-direction:column;
+}
+.drawer-header {
+  padding:14px 16px;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  flex-shrink:0;
+}
+.drawer-body { flex:1;overflow-y:auto;padding:16px; }
+.drawer-footer {
+  padding:12px 16px;
+  border-top:1px solid var(--border);
+  flex-shrink:0;
+}
+.filter-num-grid {
+  display:grid;grid-template-columns:repeat(5,1fr);gap:6px;
+  margin-bottom:8px;
+}
+.filter-num-btn {
+  height:36px;border-radius:7px;
+  font-size:13px;font-weight:700;
+  border:1px solid var(--border);
+  background:hsla(38,18%,92%,0.5);
+  color:var(--muted-fg);
+  transition:all 0.15s;
+}
+.filter-num-btn.active {
+  background:var(--sidebar);color:var(--sidebar-primary);
+  border-color:hsla(42,92%,50%,0.4);
+}
+
+/* Excel panel */
+.excel-overlay {
+  position:fixed;inset:0;z-index:300;
+  background:rgba(0,0,0,0.3);
+  backdrop-filter:blur(2px);
+}
+.excel-panel {
+  position:fixed;right:0;top:0;bottom:0;
+  width:100%;max-width:440px;
+  background:var(--card);
+  border-left:1px solid var(--border);
+  box-shadow:-8px 0 32px rgba(0,0,0,0.14);
+  display:flex;flex-direction:column;
+  z-index:301;
+}
+.excel-panel-header {
+  padding:10px 14px;
+  background:var(--sidebar);
+  border-bottom:1px solid var(--sidebar-border);
+  flex-shrink:0;
+}
+.excel-panel-header h3 { font-size:13px;font-weight:700;color:var(--sidebar-fg); }
+.excel-panel-header p { font-size:11px;color:hsla(38,35%,92%,0.6);margin-top:2px; }
+.excel-body { flex:1;overflow:hidden;padding:12px; }
+.excel-textarea {
+  width:100%;height:100%;
+  font-family:monospace;font-size:11px;
+  padding:10px;
+  border:1px solid var(--border);
+  border-radius:8px;
+  background:hsla(38,18%,92%,0.4);
+  resize:none;outline:none;
+  cursor:text;
+}
+.excel-footer {
+  padding:10px 14px;
+  border-top:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  flex-shrink:0;
+}
+
+/* Grafik tabs */
+.chart-container { padding:16px; }
+
+/* Autocomplete dropdown */
+.ac-dropdown {
+  position:absolute;top:100%;left:0;right:0;
+  z-index:50;
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:8px;
+  box-shadow:var(--shadow);
+  max-height:200px;overflow-y:auto;
+  margin-top:3px;
+}
+.ac-item {
+  width:100%;text-align:left;
+  padding:8px 12px;
+  font-size:13px;
+  transition:background 0.1s;
+}
+.ac-item:hover { background:var(--muted); }
+
+/* Musait/arsiv fullpage */
+.fullpage {
+  display:flex;flex-direction:column;
+  flex:1;overflow:hidden;
+}
+.fullpage-header {
+  padding:10px 14px;
+  border-bottom:1px solid var(--border);
+  background:var(--card);
+  display:flex;align-items:center;justify-content:space-between;
+  flex-shrink:0;
+}
+.fullpage-search {
+  padding:8px 14px;
+  border-bottom:1px solid var(--border);
+  background:var(--card);
+  flex-shrink:0;
+}
+.fullpage-body { flex:1;overflow-y:auto; }
+.inline-add-row {
+  background:hsla(350,68%,40%,0.04);
+  border-bottom:2px solid hsla(350,68%,40%,0.3);
+}
+.inline-input {
+  height:32px;
+  padding:0 8px;
+  border:1px solid hsla(350,68%,40%,0.4);
+  border-radius:6px;
+  background:var(--background);
+  font-size:12px;
+  outline:none;
+  width:100%;
+}
+.inline-input:focus { border-color:var(--primary); }
+.delete-confirm {
+  display:flex;align-items:center;gap:4px;
+}
+.confirm-yes {
+  padding:2px 8px;border-radius:4px;
+  font-size:10px;font-weight:700;
+  background:#dc2626;color:#fff;
+}
+.confirm-yes:hover { background:#b91c1c; }
+
+/* Arsiv accordion */
+.arsiv-play-card {
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:12px;
+  overflow:hidden;
+  margin-bottom:8px;
+}
+.arsiv-play-header {
+  display:flex;align-items:center;gap:10px;
+  padding:10px 14px;
+  cursor:pointer;
+  transition:background 0.1s;
+}
+.arsiv-play-header:hover { background:hsla(38,18%,92%,0.4); }
+
+/* Loading skeleton */
+.skeleton {
+  background:linear-gradient(90deg,var(--muted) 25%,hsla(38,18%,88%,0.5) 50%,var(--muted) 75%);
+  background-size:200% 100%;
+  animation:skeleton-anim 1.4s ease infinite;
+  border-radius:8px;
+}
+@keyframes skeleton-anim { 0%{background-position:200% 0;} 100%{background-position:-200% 0;} }
+
+/* Scrollbar */
+::-webkit-scrollbar { width:6px;height:6px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:hsla(38,18%,70%,0.6);border-radius:3px; }
+::-webkit-scrollbar-thumb:hover { background:hsla(38,18%,55%,0.8); }
+
+/* Notification badge */
+.notif-dot {
+  position:absolute;top:4px;right:4px;
+  width:7px;height:7px;border-radius:50%;
+  background:var(--sidebar-primary);
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <!-- HEADER -->
+  <div id="header">
+    <div class="header-inner">
+      <div class="header-brand-row">
+        <div class="brand-left">
+          <div class="brand-logo">İDT</div>
+          <div>
+            <div class="brand-title">İzmir Devlet Tiyatrosu</div>
+            <div class="brand-sub">Sanat Teknik Bürosu · Repertuvar Takip Sistemi</div>
+          </div>
+        </div>
+        <div class="header-right">
+          <button class="theme-btn" id="theme-btn" title="Tema değiştir">🌙</button>
+          <button class="hamburger" id="hamburger" aria-label="Menü">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+              <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+      <nav class="nav-row" id="nav-row">
+        <button class="nav-pill" data-page="home" onclick="navigateTo('home')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          ANA PANEL
+        </button>
+        <button class="nav-pill" data-page="oyunlar" onclick="navigateTo('oyunlar')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          PERSONEL LİSTESİ
+        </button>
+        <button class="nav-pill" data-page="sorgulama" onclick="navigateTo('sorgulama')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          SORGULAMA
+        </button>
+        <button class="nav-pill" data-page="dagilim" onclick="navigateTo('dagilim')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+          PERSONEL DAĞILIMI
+        </button>
+        <button class="nav-pill" data-page="figuran" onclick="navigateTo('figuran')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 4v16M17 4v16M3 8h18M3 16h18"/></svg>
+          FIGÜRANLAR
+        </button>
+        <button class="nav-pill" data-page="grafik" onclick="navigateTo('grafik')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          GRAFİKLER
+        </button>
+        <button class="nav-pill" data-page="musait" onclick="navigateTo('musait')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="17" y1="11" x2="23" y2="11"/></svg>
+          MÜSAİT PERSONEL
+        </button>
+        <button class="nav-pill" data-page="arsiv" onclick="navigateTo('arsiv')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+          ARŞİV OYUNLAR
+        </button>
+        <a class="nav-pill" href="turne.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+          TURNE
+        </a>
+        <button class="nav-pill" data-page="admin" onclick="navigateTo('admin')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          ADMİN
+        </button>
+      </nav>
+    </div>
+  </div>
+
+  <!-- PAGE CONTENT -->
+  <div id="page"></div>
+</div>
+
+<script>
+
+// HTML attribute içinde güvenli JS string literal üret
+function jsq(s) {
+  return "decodeURIComponent('" + encodeURIComponent(String(s)) + "')";
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   BACKEND & CACHE
+═══════════════════════════════════════════════════════════════ */
+const BACKEND = 'https://tiyatro-backend.vercel.app';
+const CACHE = {};
+const CACHE_TTL = 5 * 60 * 1000; // 5 dk
+
+async function fetchSheet(sheetName) {
+  const now = Date.now();
+  if (CACHE[sheetName] && (now - CACHE[sheetName].t) < CACHE_TTL) {
+    return CACHE[sheetName].d;
+  }
+  // React kodundaki format: /api/sheets/SHEET_NAME
+  const url = `${BACKEND}/api/sheets/${encodeURIComponent(sheetName)}`;
+  const r = await fetch(url);
+  if (!r.ok) throw new Error('API hatası: ' + r.status);
+  const raw = await r.json();
+  // Backend { headers, rows } veya { values } veya düz array döndürebilir — normalize et
+  let d;
+  if (raw && Array.isArray(raw.rows)) {
+    d = raw; // { headers, rows } — zaten doğru
+  } else if (raw && Array.isArray(raw.values)) {
+    // { values: [[header1,header2,...],[row1...],[row2...]] }
+    const [headers, ...rows] = raw.values;
+    d = { headers: headers || [], rows: rows || [] };
+  } else if (Array.isArray(raw)) {
+    // Düz array: ilk eleman header
+    const [headers, ...rows] = raw;
+    d = { headers: headers || [], rows: rows || [] };
+  } else {
+    d = { headers: [], rows: [] };
+  }
+  CACHE[sheetName] = { d, t: now };
+  return d;
+}
+
+async function postRow(sheetName, values) {
+  const url = `${BACKEND}/api/sheets/${encodeURIComponent(sheetName)}/row`;
+  const r = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ values })
+  });
+  if (!r.ok) throw new Error('POST hatası');
+  delete CACHE[sheetName];
+  return r.json();
+}
+
+async function deleteRow(sheetName, rowIndex) {
+  const url = `${BACKEND}/api/sheets/${encodeURIComponent(sheetName)}/row/${rowIndex}`;
+  const r = await fetch(url, { method: 'DELETE' });
+  if (!r.ok) throw new Error('DELETE hatası');
+  delete CACHE[sheetName];
+  return r.json();
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   VERİ İŞLEME
+═══════════════════════════════════════════════════════════════ */
+function parsePlayRows(headers, rows) {
+  const h = headers.map(x => x.trim().toLowerCase());
+  const iO = h.findIndex(v => v.startsWith('oyun'));
+  const iK = h.findIndex(v => v.startsWith('kategori'));
+  const iG = h.findIndex(v => v.startsWith('görev'));
+  const iP = h.findIndex(v => v.startsWith('kişi'));
+  const iA = h.findIndex(v => v === 'aktif');
+  const aktifIdx = iA >= 0 ? iA : 4;
+
+  return rows.map(row => {
+    const aktifVal = String(row[aktifIdx] ?? '').trim().toLowerCase();
+    return {
+      oyun: dec(String(row[iO] ?? '').trim()),
+      kategori: dec(String(row[iK] ?? '').trim()),
+      gorev: dec(String(row[iG] ?? '').trim()),
+      kisi: dec(String(row[iP] ?? '').trim()),
+      aktif: aktifVal !== 'pasif'
+    };
+  }).filter(r => r.oyun);
+}
+
+function dec(s) {
+  return String(s)
+    .replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>')
+    .replace(/&quot;/g,'"').replace(/&#39;/g,"'").replace(/&nbsp;/g,' ');
+}
+
+function trLower(s) {
+  return String(s)
+    .replace(/İ/g,'i').replace(/I/g,'ı').replace(/Ğ/g,'ğ')
+    .replace(/Ü/g,'ü').replace(/Ş/g,'ş').replace(/Ö/g,'ö').replace(/Ç/g,'ç')
+    .toLowerCase();
+}
+
+function escHtml(s) {
+  return String(s||'')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function isChildPlay(name) {
+  return name.includes('Ç.O') || name.includes('(Ç)');
+}
+
+function isFiguran(kat) {
+  const k = (kat||'').toLowerCase();
+  return k.includes('figüran') || k.includes('figuran');
+}
+
+function groupByPlay(rows) {
+  const map = new Map();
+  for (const r of rows) {
+    if (!map.has(r.oyun)) map.set(r.oyun, { people: new Set(), rows: 0, cats: new Set() });
+    const e = map.get(r.oyun);
+    if (r.kisi) r.kisi.split(',').forEach(k => { const t=k.trim(); if(t) e.people.add(t); });
+    e.rows++;
+    if (r.kategori) e.cats.add(r.kategori.trim());
+  }
+  return Array.from(map.entries())
+    .map(([name,{people,rows,cats}]) => ({ name, personelCount:people.size, rowCount:rows, cats:Array.from(cats) }))
+    .sort((a,b) => a.name.localeCompare(b.name,'tr'));
+}
+
+function groupByPerson(rows) {
+  const map = new Map();
+  for (const r of rows) {
+    if (!r.kisi) continue;
+    r.kisi.split(',').map(k=>k.trim()).filter(Boolean).forEach(kisi => {
+      if (!map.has(kisi)) map.set(kisi, { oyunlar:new Set(), gorevler:new Set(), aktif:false });
+      const e = map.get(kisi);
+      e.oyunlar.add(r.oyun);
+      if (r.gorev) e.gorevler.add(r.gorev.trim());
+      if (r.aktif) e.aktif = true;
+    });
+  }
+  return Array.from(map.entries())
+    .map(([name,{oyunlar,gorevler,aktif}]) => ({
+      name, aktif,
+      oyunlar: Array.from(oyunlar).sort((a,b)=>a.localeCompare(b,'tr')),
+      gorevler: Array.from(gorevler).sort((a,b)=>a.localeCompare(b,'tr'))
+    }))
+    .sort((a,b) => b.oyunlar.length - a.oyunlar.length);
+}
+
+function categoryBadge(kat) {
+  const c = (kat||'').trim();
+  if (c==='Oyuncu'||c.startsWith('Oyuncu')) return 'badge-blue';
+  if (isFiguran(c)) return 'badge-purple';
+  if (c.startsWith('Koro')||c.startsWith('Orkestra')) return 'badge-fuchsia';
+  if (c.startsWith('Tasarım')) return 'badge-amber';
+  if (c.startsWith('Işık')) return 'badge-yellow';
+  if (c.startsWith('Kostüm')) return 'badge-pink';
+  if (c.startsWith('Müzisyen')) return 'badge-green';
+  if (c.startsWith('Hareket')) return 'badge-teal';
+  if (c.startsWith('Sahne Amiri')) return 'badge-orange';
+  if (c.startsWith('Yönetim')) return 'badge-indigo';
+  if (c.startsWith('Ses')) return 'badge-cyan';
+  if (c.startsWith('Dramaturgi')) return 'badge-rose';
+  return 'badge-gray';
+}
+
+const PALETTE = [
+  '#c0392b','#e67e22','#f1c40f','#27ae60','#2980b9',
+  '#8e44ad','#16a085','#d35400','#2ecc71','#3498db',
+  '#9b59b6','#1abc9c','#e74c3c','#f39c12','#6c3483',
+  '#145a32','#1a5276','#7d6608','#4a235a','#1b4f72',
+  '#a93226','#1e8bc3','#196f3d','#784212','#154360'
+];
+
+/* ═══════════════════════════════════════════════════════════════
+   ROUTER
+═══════════════════════════════════════════════════════════════ */
+let currentPage = '';
+let chartInstances = {};
+
+function navigateTo(page, params) {
+  // Chart temizle
+  Object.values(chartInstances).forEach(c => { try { c.destroy(); } catch(e){} });
+  chartInstances = {};
+
+  currentPage = page;
+  // Nav aktif
+  document.querySelectorAll('.nav-pill[data-page]').forEach(b => {
+    b.classList.toggle('active', b.dataset.page === page);
+  });
+  // Menü kapat (mobil)
+  document.getElementById('nav-row').classList.remove('open');
+
+  const pg = document.getElementById('page');
+  pg.innerHTML = '<div style="padding:24px;"><div class="skeleton" style="height:40px;margin-bottom:12px;"></div>' +
+    '<div class="skeleton" style="height:24px;width:60%;margin-bottom:8px;"></div>' +
+    '<div class="skeleton" style="height:300px;border-radius:12px;"></div></div>';
+
+  const pages = {
+    home: renderHome,
+    oyunlar: renderOyunlar,
+    sorgulama: renderSorgulama,
+    dagilim: renderDagilim,
+    figuran: renderFiguran,
+    grafik: renderGrafik,
+    musait: renderMusait,
+    arsiv: renderArsiv
+  };
+  if (pages[page]) pages[page](params || {});
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ANA PANEL (home)
+═══════════════════════════════════════════════════════════════ */
+async function renderHome(params) {
+  const pg = document.getElementById('page');
+  try {
+    const data = await fetchSheet('BÜTÜN OYUNLAR');
+    const rows = parsePlayRows(data.headers, data.rows);
+    const plays = groupByPlay(rows);
+
+    const totalKisi = new Set();
+    rows.forEach(r => r.kisi.split(',').forEach(k => { if(k.trim()) totalKisi.add(k.trim()); }));
+
+    // State
+    let selectedPlay = params.oyun || null;
+    let search = '';
+    let typeFilter = 'all';
+
+    function getFiltered() {
+      let result = plays;
+      if (typeFilter === 'yetiskin') result = result.filter(p => !isChildPlay(p.name));
+      if (typeFilter === 'cocuk') result = result.filter(p => isChildPlay(p.name));
+      if (search.trim()) {
+        const lower = trLower(search.trim());
+        result = result.filter(p =>
+          trLower(p.name).includes(lower) ||
+          rows.filter(r=>r.oyun===p.name).some(r =>
+            trLower(r.kisi).includes(lower) || trLower(r.gorev).includes(lower) || trLower(r.kategori).includes(lower)
+          )
+        );
+      }
+      return result;
+    }
+
+    function renderPlayList() {
+      const filtered = getFiltered();
+      const listEl = document.getElementById('play-list');
+      if (!listEl) return;
+      if (filtered.length === 0) {
+        listEl.innerHTML = `<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><p>Sonuç bulunamadı</p></div>`;
+        return;
+      }
+      listEl.innerHTML = filtered.map(p => {
+        const child = isChildPlay(p.name);
+        const isActive = selectedPlay === p.name;
+        return `<button class="list-item${isActive?' active':''}" onclick="homeSelectPlay(${jsq(p.name)})">
+          <svg class="item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="19" x2="5" y2="5"/></svg>
+          <div style="flex:1;min-width:0;">
+            <div style="display:flex;align-items:center;gap:5px;">
+              <span class="item-name">${escHtml(p.name)}</span>
+              ${child ? '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="hsl(25,90%,50%)" stroke-width="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>' : ''}
+            </div>
+            <div class="item-sub">
+              <span>👥 ${p.personelCount} kişi</span>
+              <span>📋 ${p.rowCount} satır</span>
+            </div>
+          </div>
+        </button>`;
+      }).join('');
+    }
+
+    function renderPlayDetail() {
+      const rightEl = document.getElementById('home-right');
+      if (!rightEl) return;
+      if (!selectedPlay) {
+        rightEl.innerHTML = `<div class="welcome">
+          <div class="welcome-logo">İDT</div>
+          <h3>Bir oyun seçin</h3>
+          <p>Sol panelden bir oyunu tıklayarak<br>kadro ve personel bilgisini görüntüleyin</p>
+          <div class="stat-pills">
+            <div class="stat-pill"><strong>${plays.length}</strong> Oyun</div>
+            <div class="stat-pill"><strong>${totalKisi.size}</strong> Kişi</div>
+            <div class="stat-pill"><strong>${rows.length}</strong> Kayıt</div>
+          </div>
+        </div>`;
+        return;
+      }
+      const playRows = rows.filter(r => r.oyun === selectedPlay);
+      const byKat = {};
+      playRows.forEach(r => {
+        const k = r.kategori || 'Diğer';
+        if (!byKat[k]) byKat[k] = [];
+        byKat[k].push(r);
+      });
+      const kisiCount = new Set();
+      playRows.forEach(r => r.kisi.split(',').forEach(k=>{if(k.trim())kisiCount.add(k.trim());}));
+
+      rightEl.innerHTML = `
+        <div class="detail-header">
+          <div style="display:flex;align-items:center;gap:8px;min-width:0;">
+            <button class="back-btn" onclick="homeClearPlay()" title="Geri">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+            </button>
+            <div>
+              <h2>${escHtml(selectedPlay)}</h2>
+              <div class="sub">${kisiCount.size} kişi · ${playRows.length} kayıt</div>
+            </div>
+          </div>
+          <button class="btn btn-outline" onclick="homeExcelCopy()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Excel
+          </button>
+        </div>
+        <div class="detail-body">
+          ${Object.entries(byKat).map(([kat, items]) => `
+            <div class="kat-group">
+              <div class="kat-group-header">
+                <span class="badge ${categoryBadge(kat)}">${escHtml(kat)}</span>
+                <span style="font-size:11px;color:var(--muted-fg)">${items.length} kayıt</span>
+              </div>
+              <div class="kat-group-body">
+                ${items.map(r => `<div class="kat-row">
+                  <span class="name" onclick="goOyunlarKisi(${jsq(r.kisi)})" title="Kişi profiline git">${escHtml(r.kisi)}</span>
+                  ${r.gorev ? `<span class="gorev">— ${escHtml(r.gorev)}</span>` : ''}
+                </div>`).join('')}
+              </div>
+            </div>
+          `).join('')}
+        </div>`;
+    }
+
+    pg.innerHTML = `
+      <div class="split" id="home-split">
+        <div class="split-left" id="home-left">
+          <div style="padding:8px;border-bottom:1px solid var(--border);">
+            <div class="search-wrap">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="text" id="home-search" placeholder="Oyun, kişi, görev ara…" oninput="homeSearch(this.value)">
+              <button class="clear-btn" onclick="homeSearch('');document.getElementById('home-search').value=''">✕</button>
+            </div>
+            <div class="chip-row">
+              <button class="chip active" id="chip-all" onclick="homeType('all')">Tümü</button>
+              <button class="chip" id="chip-yetiskin" onclick="homeType('yetiskin')">Yetişkin</button>
+              <button class="chip" id="chip-cocuk" onclick="homeType('cocuk')">🧒 Çocuk</button>
+            </div>
+            <div style="font-size:10px;color:var(--muted-fg);margin-top:5px;" id="home-count">${plays.length} oyun</div>
+          </div>
+          <div style="flex:1;overflow-y:auto;" id="play-list"></div>
+        </div>
+        <div class="split-right" id="home-right"></div>
+      </div>`;
+
+    // State fonksiyonları global bağla
+    window.homeSearch = v => { search = v; renderPlayList(); document.getElementById('home-count').textContent = getFiltered().length + ' oyun'; };
+    window.homeType = t => {
+      typeFilter = t;
+      document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+      document.getElementById('chip-' + t)?.classList.add('active');
+      renderPlayList();
+      document.getElementById('home-count').textContent = getFiltered().length + ' oyun';
+    };
+    window.homeSelectPlay = name => {
+      selectedPlay = name;
+      renderPlayList();
+      renderPlayDetail();
+      // Mobil: sağı göster
+      document.getElementById('home-left')?.classList.add('hidden-mobile');
+      document.getElementById('home-right')?.classList.add('show-mobile');
+    };
+    window.homeClearPlay = () => {
+      selectedPlay = null;
+      renderPlayList();
+      renderPlayDetail();
+      document.getElementById('home-left')?.classList.remove('hidden-mobile');
+      document.getElementById('home-right')?.classList.remove('show-mobile');
+    };
+    window.homeExcelCopy = () => {
+      if (!selectedPlay) return;
+      const pRows = rows.filter(r=>r.oyun===selectedPlay);
+      const tsv = ['Kişi\tGörev\tKategori', ...pRows.map(r=>`${r.kisi}\t${r.gorev}\t${r.kategori}`)].join('\n');
+      navigator.clipboard.writeText(tsv).then(()=>alert('Kopyalandı!'));
+    };
+    window.goOyunlarKisi = kisi => navigateTo('oyunlar', { kisi });
+
+    renderPlayList();
+    renderPlayDetail();
+    if (selectedPlay) {
+      setTimeout(()=>{
+        const btn = document.querySelector(`.list-item.active`);
+        if(btn) btn.scrollIntoView({block:'nearest'});
+      },100);
+    }
+  } catch(e) {
+    pg.innerHTML = `<div class="empty"><p>Veri yüklenemedi: ${e.message}</p></div>`;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   PERSONEL LİSTESİ (oyunlar)
+═══════════════════════════════════════════════════════════════ */
+async function renderOyunlar(params) {
+  const pg = document.getElementById('page');
+  try {
+    const data = await fetchSheet('BÜTÜN OYUNLAR');
+    const rows = parsePlayRows(data.headers, data.rows);
+
+    // Kişi map
+    const personMap = new Map();
+    rows.forEach(r => {
+      r.kisi.split(',').map(k=>k.trim()).filter(Boolean).forEach(name => {
+        if (!personMap.has(name)) personMap.set(name, { plays: new Set(), rows: [] });
+        const e = personMap.get(name);
+        e.plays.add(r.oyun);
+        e.rows.push(r);
+      });
+    });
+    const persons = Array.from(personMap.entries())
+      .map(([name,{plays,rows}]) => ({ name, playCount:plays.size, rows }))
+      .sort((a,b) => a.name.localeCompare(b.name,'tr'));
+
+    // Top kategoriler
+    const katCount = new Map();
+    rows.forEach(r => { const k=r.kategori.trim(); if(k) katCount.set(k,(katCount.get(k)||0)+1); });
+    const topKats = Array.from(katCount.entries()).sort((a,b)=>b[1]-a[1]).slice(0,6).map(([k])=>k);
+
+    let selected = params.kisi || null;
+    let search = '';
+    let katFilter = 'all';
+
+    function getFiltered() {
+      let result = persons;
+      if (katFilter !== 'all') result = result.filter(p => p.rows.some(r=>r.kategori.trim()===katFilter));
+      if (search.trim()) {
+        const lower = trLower(search.trim());
+        result = result.filter(p =>
+          trLower(p.name).includes(lower) ||
+          p.rows.some(r => trLower(r.gorev).includes(lower)||trLower(r.oyun).includes(lower)||trLower(r.kategori).includes(lower))
+        );
+      }
+      return result.sort((a,b) => {
+        const aA = a.rows.some(r=>r.aktif)?0:1, bA = b.rows.some(r=>r.aktif)?0:1;
+        if (aA!==bA) return aA-bA;
+        return a.name.localeCompare(b.name,'tr');
+      });
+    }
+
+    function renderPersonList() {
+      const listEl = document.getElementById('person-list');
+      if (!listEl) return;
+      const filtered = getFiltered();
+      document.getElementById('oyunlar-count').textContent = filtered.length + ' kişi';
+      if (filtered.length === 0) {
+        listEl.innerHTML = `<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg><p>Sonuç bulunamadı</p></div>`;
+        return;
+      }
+      listEl.innerHTML = filtered.map(p => {
+        const isActive = selected === p.name;
+        const isAktif = p.rows.some(r=>r.aktif);
+        const cats = [...new Set(p.rows.map(r=>r.kategori.trim()).filter(Boolean))];
+        return `<button class="list-item${isActive?' active':''}${!isAktif?' pasif':''}" onclick="oyunlarSelect(${jsq(p.name)})">
+          <div style="flex:1;min-width:0;">
+            <div style="display:flex;align-items:center;gap:5px;">
+              <span class="item-name">${escHtml(p.name)}</span>
+              ${!isAktif ? '<span class="pasif-badge">PASİF</span>' : ''}
+            </div>
+            <div class="item-sub">${p.playCount} oyun · ${cats.slice(0,2).join(', ')}</div>
+          </div>
+        </button>`;
+      }).join('');
+    }
+
+    function renderPersonDetail() {
+      const rightEl = document.getElementById('oyunlar-right');
+      if (!rightEl) return;
+      if (!selected) {
+        const uniqueOyunlar = new Set(rows.map(r=>r.oyun));
+        rightEl.innerHTML = `<div class="welcome">
+          <div class="welcome-logo">İDT</div>
+          <h3>Bir kişi seçin</h3>
+          <p>Sol panelden bir kişiyi tıklayarak<br>oyun ve görev listesini görüntüleyin</p>
+          <div class="stat-pills">
+            <div class="stat-pill"><strong>${persons.length}</strong> Kişi</div>
+            <div class="stat-pill"><strong>${uniqueOyunlar.size}</strong> Oyun</div>
+            <div class="stat-pill"><strong>${rows.length}</strong> Kayıt</div>
+          </div>
+        </div>`;
+        return;
+      }
+      const person = persons.find(p=>p.name===selected);
+      if (!person) return;
+      const pRows = rows.filter(r => r.kisi.split(',').some(k=>k.trim()===selected));
+      const byOyun = {};
+      pRows.forEach(r => { if(!byOyun[r.oyun]) byOyun[r.oyun]=[]; byOyun[r.oyun].push(r); });
+      const oyunList = Object.keys(byOyun).sort((a,b)=>a.localeCompare(b,'tr'));
+      const gorevler = [...new Set(pRows.map(r=>r.gorev).filter(Boolean))];
+
+      rightEl.innerHTML = `
+        <div class="detail-header">
+          <div style="display:flex;align-items:center;gap:8px;min-width:0;">
+            <button class="back-btn" onclick="oyunlarClear()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+            </button>
+            <div>
+              <h2>${escHtml(selected)}</h2>
+              <div class="sub">${oyunList.length} oyun · ${pRows.length} kayıt${gorevler.length?' · '+gorevler.slice(0,2).join(', '):''}</div>
+            </div>
+          </div>
+          <button class="btn btn-outline" onclick="navigateTo('dagilim',{kisi:${jsq(selected)}})">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+            Dağılım
+          </button>
+        </div>
+        <div class="detail-body">
+          ${oyunList.map(oyunAd => {
+            const oyunRows = byOyun[oyunAd];
+            const child = isChildPlay(oyunAd);
+            return `<div class="kat-group">
+              <div class="kat-group-header" style="cursor:pointer;" onclick="goHomeOyun(${jsq(oyunAd)})">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--sidebar-primary)" stroke-width="2"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="19" x2="5" y2="5"/></svg>
+                <span style="font-weight:700;font-size:12px;flex:1;">${escHtml(oyunAd)}</span>
+                ${child ? '<span style="font-size:10px;font-weight:700;color:hsl(25,90%,50%);background:hsla(25,90%,50%,0.1);padding:2px 6px;border-radius:4px;">Ç.O</span>' : ''}
+              </div>
+              <div class="kat-group-body">
+                ${oyunRows.map(r=>`<div class="kat-row">
+                  <span class="badge ${categoryBadge(r.kategori)}">${escHtml(r.kategori)}</span>
+                  <span class="gorev">${escHtml(r.gorev||'—')}</span>
+                </div>`).join('')}
+              </div>
+            </div>`;
+          }).join('')}
+        </div>`;
+    }
+
+    pg.innerHTML = `
+      <div class="split">
+        <div class="split-left" id="oyunlar-left">
+          <div style="padding:8px;border-bottom:1px solid var(--border);">
+            <div class="search-wrap">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="text" id="oyunlar-search" placeholder="Kişi, görev, oyun ara…" oninput="oyunlarSearch(this.value)">
+            </div>
+            <div class="chip-row" id="kat-chips">
+              <button class="chip active" data-kat="all" onclick="oyunlarKat('all')">Tümü</button>
+              ${topKats.map(k=>`<button class="chip" data-kat="${escHtml(k)}" onclick="oyunlarKat(${jsq(k)})">${escHtml(k)}</button>`).join('')}
+            </div>
+            <div style="font-size:10px;color:var(--muted-fg);margin-top:5px;" id="oyunlar-count">${persons.length} kişi</div>
+          </div>
+          <div style="flex:1;overflow-y:auto;" id="person-list"></div>
+        </div>
+        <div class="split-right" id="oyunlar-right"></div>
+      </div>`;
+
+    window.oyunlarSearch = v => { search=v; renderPersonList(); };
+    window.oyunlarKat = k => {
+      katFilter = k;
+      document.querySelectorAll('#kat-chips .chip').forEach(c=>c.classList.toggle('active',c.dataset.kat===k));
+      renderPersonList();
+    };
+    window.oyunlarSelect = name => {
+      selected = name;
+      renderPersonList();
+      renderPersonDetail();
+      document.getElementById('oyunlar-left')?.classList.add('hidden-mobile');
+      document.getElementById('oyunlar-right')?.classList.add('show-mobile');
+    };
+    window.oyunlarClear = () => {
+      selected = null;
+      renderPersonList();
+      renderPersonDetail();
+      document.getElementById('oyunlar-left')?.classList.remove('hidden-mobile');
+      document.getElementById('oyunlar-right')?.classList.remove('show-mobile');
+    };
+    window.goHomeOyun = name => navigateTo('home', { oyun: name });
+
+    renderPersonList();
+    renderPersonDetail();
+    if (selected) {
+      setTimeout(()=>{
+        const btn = document.querySelector('#person-list .list-item.active');
+        if(btn) btn.scrollIntoView({block:'nearest'});
+      }, 200);
+    }
+  } catch(e) {
+    pg.innerHTML = `<div class="empty"><p>Veri yüklenemedi: ${e.message}</p></div>`;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SORGULAMA
+═══════════════════════════════════════════════════════════════ */
+async function renderSorgulama() {
+  const pg = document.getElementById('page');
+  try {
+    const data = await fetchSheet('BÜTÜN OYUNLAR');
+    const allRows = parsePlayRows(data.headers, data.rows);
+    const allPlays = groupByPlay(allRows).map(p=>p.name);
+
+    let activeTab = 'kesisim';
+    let filterGorev='', filterOyun='', filterKisi='';
+    let oyunA='', oyunB='';
+
+    function getFilterResults() {
+      return allRows.filter(r => {
+        if (filterGorev && !r.kategori.toLowerCase().includes(filterGorev.toLowerCase())) return false;
+        if (filterOyun && !r.oyun.toLowerCase().includes(filterOyun.toLowerCase())) return false;
+        if (filterKisi && !r.kisi.toLowerCase().includes(filterKisi.toLowerCase())) return false;
+        return true;
+      });
+    }
+
+    function getKesisim() {
+      if (!oyunA || !oyunB) return null;
+      const rowsA = allRows.filter(r=>r.oyun===oyunA);
+      const rowsB = allRows.filter(r=>r.oyun===oyunB);
+      const mapA=new Map(), mapB=new Map();
+      rowsA.forEach(r=>r.kisi.split(',').forEach(k=>{const t=k.trim();if(!t)return;if(!mapA.has(t))mapA.set(t,[]);const roles=mapA.get(t);if(r.gorev&&!roles.includes(r.gorev))roles.push(r.gorev);}));
+      rowsB.forEach(r=>r.kisi.split(',').forEach(k=>{const t=k.trim();if(!t)return;if(!mapB.has(t))mapB.set(t,[]);const roles=mapB.get(t);if(r.gorev&&!roles.includes(r.gorev))roles.push(r.gorev);}));
+      const setA=new Set(mapA.keys()), setB=new Set(mapB.keys());
+      const onlyA=[...setA].filter(k=>!setB.has(k)).sort((a,b)=>a.localeCompare(b,'tr')).map(k=>({name:k,gorev:(mapA.get(k)||[]).join(', ')}));
+      const onlyB=[...setB].filter(k=>!setA.has(k)).sort((a,b)=>a.localeCompare(b,'tr')).map(k=>({name:k,gorev:(mapB.get(k)||[]).join(', ')}));
+      const common=[...setA].filter(k=>setB.has(k)).sort((a,b)=>a.localeCompare(b,'tr')).map(k=>({name:k,gorevA:(mapA.get(k)||[]).join(', '),gorevB:(mapB.get(k)||[]).join(', ')}));
+      return {onlyA,onlyB,common};
+    }
+
+    function renderPage() {
+      const filterResults = getFilterResults();
+      const kesisim = getKesisim();
+
+      pg.innerHTML = `
+        <div style="flex:1;overflow-y:auto;padding:0;">
+        <div class="scroll-page">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
+            <div class="page-header">
+              <h2>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                Sorgulama
+              </h2>
+              <p>Personel, oyun ve kategoriye göre filtrele — ya da iki oyunun ortak personelini karşılaştır</p>
+            </div>
+            <button class="btn btn-outline" onclick="sorgulamaExcel()" style="flex-shrink:0;margin-top:4px;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Excel'e Kopyala
+            </button>
+          </div>
+
+          <div class="tab-bar">
+            <button class="tab-btn${activeTab==='kesisim'?' active':''}" onclick="sorgulamaTab('kesisim')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M6 21V9a9 9 0 0 0 9 9"/></svg>
+              Kesişim Analizi
+            </button>
+            <button class="tab-btn${activeTab==='filtre'?' active':''}" onclick="sorgulamaTab('filtre')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              Filtrele
+            </button>
+          </div>
+
+          ${activeTab === 'filtre' ? `
+          <div class="card">
+            <div class="card-header"><h3>Filtreler</h3></div>
+            <div style="padding:16px;">
+              <div class="filter-grid">
+                <div class="filter-field">
+                  <label>Kategori <span style="font-weight:400;font-size:10px;">— ör: Oyuncu</span></label>
+                  <div class="field-wrap">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <input type="text" placeholder="Kategori..." value="${escHtml(filterGorev)}" oninput="sorgulamaFilter('gorev',this.value)">
+                  </div>
+                </div>
+                <div class="filter-field">
+                  <label>Oyun</label>
+                  <div class="field-wrap">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <input type="text" placeholder="Oyun adı..." value="${escHtml(filterOyun)}" oninput="sorgulamaFilter('oyun',this.value)">
+                  </div>
+                </div>
+                <div class="filter-field">
+                  <label>Kişi</label>
+                  <div class="field-wrap">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <input type="text" placeholder="Kişi adı..." value="${escHtml(filterKisi)}" oninput="sorgulamaFilter('kisi',this.value)">
+                  </div>
+                </div>
+              </div>
+              ${(filterGorev||filterOyun||filterKisi) ? `<button onclick="sorgulamaTemizle()" style="margin-top:10px;font-size:12px;color:var(--muted-fg);">✕ Temizle</button>` : ''}
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3>Sonuçlar</h3>
+              <span style="font-size:12px;color:var(--muted-fg);">${(filterGorev||filterOyun||filterKisi)?filterResults.length+' satır':'Filtre girerek başlayın'}</span>
+            </div>
+            ${!(filterGorev||filterOyun||filterKisi) ? `<div class="empty"><p>Filtre girin</p><div class="sub">Kategori, oyun veya kişi alanlarından birini doldurun</div></div>` :
+              filterResults.length===0 ? `<div class="empty"><p>Sonuç bulunamadı</p></div>` : `
+              <div class="tbl-wrap">
+                <table>
+                  <thead><tr><th>Kişi</th><th>Görev</th><th>Kategori</th><th>Oyun</th></tr></thead>
+                  <tbody>
+                    ${filterResults.slice(0,300).map((r,i)=>`<tr>
+                      <td style="font-weight:600;white-space:nowrap;">${escHtml(r.kisi)}</td>
+                      <td style="color:var(--muted-fg);">${escHtml(r.gorev)}</td>
+                      <td><span class="badge ${categoryBadge(r.kategori)}">${escHtml(r.kategori)}</span></td>
+                      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted-fg);">${escHtml(r.oyun)}</td>
+                    </tr>`).join('')}
+                    ${filterResults.length>300?`<tr><td colspan="4" style="text-align:center;color:var(--muted-fg);font-size:12px;padding:10px;">+${filterResults.length-300} daha</td></tr>`:''}
+                  </tbody>
+                </table>
+              </div>`}
+          </div>` : `
+
+          <!-- KESİŞİM -->
+          <div class="card">
+            <div style="padding:16px;">
+              <p style="font-size:12px;color:var(--muted-fg);margin-bottom:14px;">İki oyun seçin — aynı kişilerin her iki oyunda da görev alıp almadığını görün</p>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                <div>
+                  <label style="display:block;font-size:11px;font-weight:700;color:hsl(220,80%,45%);margin-bottom:6px;">1. OYUN</label>
+                  <div style="position:relative;">
+                    <div class="search-wrap">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                      <input type="text" id="oyunA-input" placeholder="Oyun adı..." value="${escHtml(oyunA)}" oninput="kesisimAC('A',this.value)" onfocus="kesisimACOpen('A')" autocomplete="off" style="border-color:${oyunA?'hsl(220,80%,45%)':''}" >
+                    </div>
+                    <div id="ac-A" class="ac-dropdown" style="display:none;"></div>
+                  </div>
+                </div>
+                <div>
+                  <label style="display:block;font-size:11px;font-weight:700;color:hsl(340,75%,45%);margin-bottom:6px;">2. OYUN</label>
+                  <div style="position:relative;">
+                    <div class="search-wrap">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                      <input type="text" id="oyunB-input" placeholder="Oyun adı..." value="${escHtml(oyunB)}" oninput="kesisimAC('B',this.value)" onfocus="kesisimACOpen('B')" autocomplete="off" style="border-color:${oyunB?'hsl(340,75%,45%)':''}">
+                    </div>
+                    <div id="ac-B" class="ac-dropdown" style="display:none;"></div>
+                  </div>
+                </div>
+              </div>
+              ${(oyunA||oyunB)?`<button onclick="kesisimTemizle()" style="margin-top:10px;font-size:12px;color:var(--muted-fg);">✕ Temizle</button>`:''}
+            </div>
+          </div>
+
+          ${!oyunA||!oyunB ? `<div class="empty">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:32px;height:32px;opacity:0.3;"><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M6 21V9a9 9 0 0 0 9 9"/></svg>
+            <p>İki oyun seçin</p>
+            <div class="sub">Ortak personel listesi burada görünecek</div>
+          </div>` : kesisim ? `
+          <!-- VENN -->
+          <div class="card" style="padding:12px;">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:8px;">
+              <p style="font-size:11px;font-weight:700;color:hsl(220,80%,45%);flex:1;word-break:break-word;">${escHtml(oyunA)}</p>
+              <p style="font-size:11px;font-weight:700;color:hsl(340,75%,45%);flex:1;text-align:right;word-break:break-word;">${escHtml(oyunB)}</p>
+            </div>
+            <div class="venn-container">
+              <svg viewBox="0 0 500 200" style="width:100%;max-width:500px;">
+                <circle cx="175" cy="100" r="85" fill="rgba(37,99,235,0.10)" stroke="rgba(37,99,235,0.70)" stroke-width="2.5"/>
+                <circle cx="325" cy="100" r="85" fill="rgba(220,38,127,0.08)" stroke="rgba(220,38,127,0.70)" stroke-width="2.5"/>
+                <text x="105" y="93" text-anchor="middle" font-size="38" font-weight="900" fill="rgb(37,99,235)">${kesisim.onlyA.length}</text>
+                <text x="105" y="118" text-anchor="middle" font-size="12" font-weight="700" fill="rgb(37,99,235)" opacity="0.9">sadece</text>
+                <text x="105" y="133" text-anchor="middle" font-size="12" font-weight="700" fill="rgb(37,99,235)" opacity="0.9">A</text>
+                <text x="250" y="93" text-anchor="middle" font-size="34" font-weight="900" fill="rgb(100,48,210)">${kesisim.common.length}</text>
+                <text x="250" y="118" text-anchor="middle" font-size="12" font-weight="700" fill="rgb(100,48,210)" opacity="0.9">ortak</text>
+                <text x="395" y="93" text-anchor="middle" font-size="38" font-weight="900" fill="rgb(220,38,127)">${kesisim.onlyB.length}</text>
+                <text x="395" y="118" text-anchor="middle" font-size="12" font-weight="700" fill="rgb(220,38,127)" opacity="0.9">sadece</text>
+                <text x="395" y="133" text-anchor="middle" font-size="12" font-weight="700" fill="rgb(220,38,127)" opacity="0.9">B</text>
+              </svg>
+            </div>
+          </div>
+          <div class="kesisim-cols">
+            ${['A','ortak','B'].map((type,ti) => {
+              const list = type==='A'?kesisim.onlyA:type==='B'?kesisim.onlyB:kesisim.common;
+              const colors = ['hsl(220,80%,45%)','hsl(var(--sidebar-primary))','hsl(340,75%,45%)'];
+              const bgColors = ['hsl(220,80%,58%,0.10)','hsl(42,92%,50%,0.08)','hsl(340,75%,55%,0.10)'];
+              const labels = [`Sadece ${oyunA.length>20?oyunA.slice(0,18)+'…':oyunA}`, 'Ortak Kişiler', `Sadece ${oyunB.length>20?oyunB.slice(0,18)+'…':oyunB}`];
+              const borderColors = ['hsl(220,80%,50%,0.3)','hsl(42,92%,50%,0.3)','hsl(340,75%,50%,0.3)'];
+              return `<div class="card" style="border-color:${borderColors[ti]};">
+                <div style="padding:12px 14px;border-bottom:1px solid ${borderColors[ti]};background:${bgColors[ti]};">
+                  <p style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:${colors[ti]};">${labels[ti]}</p>
+                  <p style="font-size:24px;font-weight:700;color:var(--foreground);margin-top:3px;">${list.length}</p>
+                </div>
+                <div style="padding:10px;max-height:280px;overflow-y:auto;">
+                  ${list.length===0?`<p style="font-size:12px;color:var(--muted-fg);font-style:italic;">Kişi yok</p>`:
+                    list.map(k=>`<div style="padding:6px 8px;border-radius:6px;">
+                      <p style="font-size:12px;font-weight:600;">${escHtml(k.name)}</p>
+                      ${type==='ortak'?`
+                        ${k.gorevA?`<p style="font-size:10px;color:var(--muted-fg);"><span style="font-weight:600;color:hsl(220,80%,45%)">A:</span> ${escHtml(k.gorevA)}</p>`:''}
+                        ${k.gorevB?`<p style="font-size:10px;color:var(--muted-fg);"><span style="font-weight:600;color:hsl(340,75%,45%)">B:</span> ${escHtml(k.gorevB)}</p>`:''}
+                      `:`${k.gorev?`<p style="font-size:10px;color:var(--muted-fg);">${escHtml(k.gorev)}</p>`:''}`}
+                    </div>`).join('')}
+                </div>
+              </div>`;
+            }).join('')}
+          </div>` : ''}
+          `}
+        </div>
+        </div>`;
+
+      // Autocomplete setup
+      function setupAC(side, inputId, acId) {
+        const input = document.getElementById(inputId);
+        const ac = document.getElementById(acId);
+        if (!input || !ac) return;
+        input.addEventListener('input', () => {
+          const v = input.value.toLowerCase();
+          const items = v ? allPlays.filter(p=>p.toLowerCase().includes(v)).slice(0,12) : allPlays.slice(0,12);
+          ac.style.display = items.length ? 'block' : 'none';
+          ac.innerHTML = items.map(p=>`<button class="ac-item" onmousedown="kesisimSelect(${jsq(side)},${jsq(p)})">${escHtml(p)}</button>`).join('');
+        });
+        input.addEventListener('focus', () => {
+          const v = input.value.toLowerCase();
+          const items = v ? allPlays.filter(p=>p.toLowerCase().includes(v)).slice(0,12) : allPlays.slice(0,12);
+          ac.style.display = items.length ? 'block' : 'none';
+          ac.innerHTML = items.map(p=>`<button class="ac-item" onmousedown="kesisimSelect(${jsq(side)},${jsq(p)})">${escHtml(p)}</button>`).join('');
+        });
+        input.addEventListener('blur', () => setTimeout(()=>{ ac.style.display='none'; },200));
+      }
+      if (activeTab==='kesisim') {
+        setupAC('A','oyunA-input','ac-A');
+        setupAC('B','oyunB-input','ac-B');
+      }
+    }
+
+    window.sorgulamaTab = tab => { activeTab=tab; renderPage(); };
+    window.sorgulamaFilter = (field,val) => {
+      if(field==='gorev') filterGorev=val;
+      else if(field==='oyun') filterOyun=val;
+      else filterKisi=val;
+    };
+    window.sorgulamaTemizle = () => { filterGorev=filterOyun=filterKisi=''; renderPage(); };
+    window.kesisimAC = (side,val) => { if(side==='A') oyunA=val; else oyunB=val; };
+    window.kesisimACOpen = () => {};
+    window.kesisimSelect = (side,name) => {
+      if(side==='A'){oyunA=name;const i=document.getElementById('oyunA-input');if(i)i.value=name;}
+      else{oyunB=name;const i=document.getElementById('oyunB-input');if(i)i.value=name;}
+      renderPage();
+    };
+    window.kesisimTemizle = () => { oyunA=oyunB=''; renderPage(); };
+    window.sorgulamaExcel = () => {
+      let tsv='';
+      if(activeTab==='filtre'){
+        const fr=getFilterResults();
+        tsv=['Oyun\tKategori\tGörev\tKişi',...fr.map(r=>`${r.oyun}\t${r.kategori}\t${r.gorev}\t${r.kisi}`)].join('\n');
+      } else {
+        const k=getKesisim();
+        if(!k) return;
+        const lines=['Durum\tKişi\tGörev (A)\tGörev (B)'];
+        k.common.forEach(x=>lines.push(`Ortak\t${x.name}\t${x.gorevA}\t${x.gorevB}`));
+        k.onlyA.forEach(x=>lines.push(`Sadece A\t${x.name}\t${x.gorev}\t`));
+        k.onlyB.forEach(x=>lines.push(`Sadece B\t${x.name}\t\t${x.gorev}`));
+        tsv=lines.join('\n');
+      }
+      if(!tsv) return;
+      navigator.clipboard.writeText(tsv).then(()=>alert('Kopyalandı!'));
+    };
+
+    renderPage();
+  } catch(e) {
+    pg.innerHTML = `<div class="empty"><p>Veri yüklenemedi: ${e.message}</p></div>`;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   PERSONEL DAĞILIMI (dagilim)
+═══════════════════════════════════════════════════════════════ */
+async function renderDagilim(params) {
+  const pg = document.getElementById('page');
+  try {
+    const data = await fetchSheet('BÜTÜN OYUNLAR');
+    const allRows = parsePlayRows(data.headers, data.rows);
+    const people = groupByPerson(allRows);
+
+    let search = params.kisi || '';
+    let expanded = params.kisi || null;
+    let minPlays = 1;
+    let filterOyun = '';
+    let drawerOpen = false;
+    let excelOpen = false;
+
+    function getFiltered() {
+      let result = minPlays===1 ? people : people.filter(p=>p.oyunlar.length===minPlays);
+      if (search.trim()) result = result.filter(p=>trLower(p.name).includes(trLower(search.trim())));
+      if (filterOyun.trim()) result = result.filter(p=>p.oyunlar.some(o=>trLower(o).includes(trLower(filterOyun))));
+      return [...result].sort((a,b)=>{ if(a.aktif!==b.aktif) return a.aktif?-1:1; return b.oyunlar.length-a.oyunlar.length; });
+    }
+
+    function renderAll() {
+      const filtered = getFiltered();
+      pg.innerHTML = `
+        <div style="flex:1;overflow-y:auto;padding:0;">
+        <div class="scroll-page">
+          <div class="page-header">
+            <h2><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg> Personel Dağılımı</h2>
+            <p>Her kişinin hangi oyunlarda görev aldığını gösterir</p>
+          </div>
+
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <div class="search-wrap" style="flex:1;min-width:200px;max-width:320px;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="text" placeholder="Kişi ara..." value="${escHtml(search)}" oninput="dagilimSearch(this.value)" id="dagilim-search-input">
+            </div>
+            <span style="font-size:12px;color:var(--muted-fg);">${filtered.length} kişi</span>
+            <div style="margin-left:auto;display:flex;gap:8px;">
+              ${minPlays>1?`<span style="font-size:11px;font-weight:700;padding:2px 10px;border-radius:12px;background:var(--sidebar);color:var(--sidebar-primary);">Tam ${minPlays} oyun</span>`:''}
+              <button class="btn btn-outline" onclick="dagilimExcelOpen()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Excel
+              </button>
+              <button class="btn btn-outline${(drawerOpen||minPlays>1||filterOyun)?' active':''}" onclick="dagilimDrawer()" style="${(minPlays>1||filterOyun)?'background:var(--sidebar);color:var(--sidebar-primary);border-color:hsla(42,92%,50%,0.4);':''}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+                Filtrele
+              </button>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            ${filtered.length===0?`<div class="empty"><p>Sonuç bulunamadı</p></div>`:''}
+            ${filtered.map(p => {
+              const multi = p.oyunlar.length>1;
+              const isOpen = expanded===p.name;
+              return `<div class="dagilim-item${multi?' multi':''}">
+                <button class="dagilim-btn" onclick="dagilimToggle(${jsq(p.name)})">
+                  <div class="dagilim-count${multi?' multi':' single'}">${p.oyunlar.length}</div>
+                  <div style="flex:1;min-width:0;">
+                    <div style="display:flex;align-items:center;gap:8px;">
+                      <p style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(p.name)}</p>
+                      ${!p.aktif?'<span class="pasif-badge">PASİF</span>':''}
+                    </div>
+                    <p style="font-size:11px;color:var(--muted-fg);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${p.gorevler.slice(0,3).join(' · ')}${p.gorevler.length>3?' +'+(p.gorevler.length-3):''}</p>
+                  </div>
+                  <span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:12px;background:var(--muted);color:var(--foreground);flex-shrink:0;">${p.oyunlar.length} oyun</span>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;color:var(--muted-fg);transition:transform 0.2s;${isOpen?'transform:rotate(180deg)':''}"><polyline points="6 9 12 15 18 9"/></svg>
+                </button>
+                ${isOpen?`<div class="dagilim-expand">
+                  <p style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--muted-fg);margin-bottom:8px;">Oyunlar ve Görevler</p>
+                  ${p.oyunlar.map(o=>{
+                    const child=isChildPlay(o);
+                    const rForPlay=allRows.filter(r=>r.oyun===o&&r.kisi.split(',').some(k=>k.trim()===p.name));
+                    const gorevs=[...new Set(rForPlay.map(r=>r.gorev).filter(Boolean))];
+                    return `<div class="oyun-in-dagilim">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="${child?'hsl(155,65%,38%)':'var(--muted-fg)'}" stroke-width="2" style="flex-shrink:0;opacity:${child?1:0.4};"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="19" x2="5" y2="5"/></svg>
+                      <span style="font-size:12px;font-weight:600;flex:1;${child?'color:hsl(155,65%,38%);':''}">${escHtml(o)}</span>
+                      ${gorevs.map(g=>`<span class="gorev-tag">${escHtml(g)}</span>`).join('')}
+                    </div>`;
+                  }).join('')}
+                </div>`:''}
+              </div>`;
+            }).join('')}
+          </div>
+        </div>
+        </div>
+
+        ${drawerOpen?`<div class="drawer-overlay" onclick="dagilimDrawerClose()">
+          <div class="drawer" onclick="event.stopPropagation()">
+            <div class="drawer-header">
+              <h3 style="font-size:13px;font-weight:700;">Filtreler</h3>
+              <button onclick="dagilimDrawerClose()" style="color:var(--muted-fg);">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+            <div class="drawer-body">
+              <p style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--muted-fg);margin-bottom:10px;">Oyun Sayısı (Tam Eşleşme)</p>
+              <div class="filter-num-grid">
+                ${[1,2,3,4,5,6,7,8,9,10].map(n=>`<button class="filter-num-btn${minPlays===n?' active':''}" onclick="dagilimMinPlays(${n})">${n===1?'1+':n}</button>`).join('')}
+              </div>
+              <p style="font-size:11px;color:var(--muted-fg);margin-bottom:20px;">${minPlays===1?'1 veya daha fazla oyun':`Tam ${minPlays} oyun`}</p>
+
+              <p style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--muted-fg);margin-bottom:8px;">Oyuna Göre</p>
+              <div class="search-wrap">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input type="text" placeholder="Oyun adı..." value="${escHtml(filterOyun)}" oninput="dagilimFilterOyun(this.value)">
+              </div>
+            </div>
+            <div class="drawer-footer">
+              <button class="btn btn-outline" style="width:100%;justify-content:center;" onclick="dagilimFilterTemizle()">Filtreleri Temizle</button>
+            </div>
+          </div>
+        </div>`:''}
+
+        ${excelOpen?`<div class="excel-overlay" onclick="dagilimExcelClose()"></div>
+        <div class="excel-panel">
+          <div class="excel-panel-header">
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              <div>
+                <h3>Excel'e Aktar</h3>
+                <p>${getFiltered().length} kişi</p>
+              </div>
+              <button onclick="dagilimExcelClose()" style="color:hsla(38,35%,92%,0.65);padding:6px;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+          </div>
+          <div style="padding:8px 14px;border-bottom:1px solid var(--border);background:hsla(38,18%,92%,0.3);">
+            <span style="font-size:11px;color:var(--muted-fg);"><strong style="color:var(--foreground);">${getFiltered().length}</strong> kişi · Kişi, Oyun Sayısı, Oyunlar, Görevler</span>
+          </div>
+          <div style="padding:12px 14px 4px;font-size:11px;color:var(--muted-fg);">Tümünü seçip kopyalayın, Excel'e yapıştırın.</div>
+          <div class="excel-body">
+            <textarea class="excel-textarea" readonly onclick="this.select()" id="dagilim-excel-txt"></textarea>
+          </div>
+          <div class="excel-footer">
+            <span style="font-size:10px;color:var(--muted-fg);">Ctrl+A → Ctrl+C → Excel'e yapıştır</span>
+            <div style="display:flex;gap:8px;">
+              <button class="btn btn-outline" onclick="dagilimExcelClose()">Kapat</button>
+              <button class="btn btn-primary" onclick="dagilimExcelCopy()" id="dagilim-copy-btn">Kopyala</button>
+            </div>
+          </div>
+        </div>`:''}`;
+
+      if (excelOpen) {
+        const txt = document.getElementById('dagilim-excel-txt');
+        if (txt) {
+          const f = getFiltered();
+          const lines = ['Kişi\tOyun Sayısı\tOyunlar\tGörevler',
+            ...f.map(p=>`${p.name}\t${p.oyunlar.length}\t${p.oyunlar.join(', ')}\t${p.gorevler.join(', ')}`)
+          ];
+          txt.value = lines.join('\n');
+        }
+      }
+    }
+
+    window.dagilimSearch = v => { search=v; renderAll(); };
+    window.dagilimToggle = name => { expanded = expanded===name?null:name; renderAll(); };
+    window.dagilimDrawer = () => { drawerOpen=true; renderAll(); };
+    window.dagilimDrawerClose = () => { drawerOpen=false; renderAll(); };
+    window.dagilimMinPlays = n => { minPlays=n; renderAll(); };
+    window.dagilimFilterOyun = v => { filterOyun=v; };
+    window.dagilimFilterTemizle = () => { minPlays=1; filterOyun=''; renderAll(); };
+    window.dagilimExcelOpen = () => { excelOpen=true; renderAll(); };
+    window.dagilimExcelClose = () => { excelOpen=false; renderAll(); };
+    window.dagilimExcelCopy = () => {
+      const txt=document.getElementById('dagilim-excel-txt');
+      if(!txt) return;
+      navigator.clipboard.writeText(txt.value).then(()=>{
+        const btn=document.getElementById('dagilim-copy-btn');
+        if(btn){btn.textContent='✓ Kopyalandı';setTimeout(()=>{btn.textContent='Kopyala';},2000);}
+      });
+    };
+
+    renderAll();
+    if (search) setTimeout(()=>{ const inp=document.getElementById('dagilim-search-input'); if(inp){inp.focus();inp.setSelectionRange(inp.value.length,inp.value.length);} },100);
+  } catch(e) {
+    pg.innerHTML = `<div class="empty"><p>Veri yüklenemedi: ${e.message}</p></div>`;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   FIGÜRANLAR
+═══════════════════════════════════════════════════════════════ */
+async function renderFiguran() {
+  const pg = document.getElementById('page');
+  try {
+    const [figuranData, oyunlarData] = await Promise.all([
+      fetchSheet('FİGÜRAN LİSTESİ'),
+      fetchSheet('BÜTÜN OYUNLAR')
+    ]);
+    const oyunRows = parsePlayRows(oyunlarData.headers, oyunlarData.rows).filter(r=>isFiguran(r.kategori));
+    const listeRows = figuranData.rows || [];
+    const listeHeaders = figuranData.headers || [];
+
+    let tab = 'liste';
+    let search = '';
+
+    function getFilteredListe() {
+      if (!search.trim()) return listeRows;
+      const lower = trLower(search);
+      return listeRows.filter(row=>row.some(c=>trLower(String(c??'')).includes(lower)));
+    }
+    function getFilteredOyun() {
+      if (!search.trim()) return oyunRows;
+      const lower = trLower(search);
+      return oyunRows.filter(r=>trLower(r.kisi).includes(lower)||trLower(r.oyun).includes(lower)||trLower(r.gorev).includes(lower));
+    }
+
+    function renderAll() {
+      const fL = getFilteredListe(), fO = getFilteredOyun();
+      pg.innerHTML = `
+        <div style="flex:1;overflow-y:auto;padding:0;">
+        <div class="scroll-page">
+          <div class="page-header">
+            <h2><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 4v16M17 4v16M3 8h18M3 16h18"/></svg> Figüranlar</h2>
+            <p>Figüran listesi ve oyunlardaki figüran görevleri</p>
+          </div>
+
+          <div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px;">
+            <div class="tab-bar">
+              <button class="tab-btn${tab==='liste'?' active':''}" onclick="figuranTab('liste')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                FİGÜRAN LİSTESİ (${fL.length})
+              </button>
+              <button class="tab-btn${tab==='oyunlar'?' active':''}" onclick="figuranTab('oyunlar')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+                OYUN BAZLI (${fO.length})
+              </button>
+            </div>
+            <div class="search-wrap" style="flex:1;min-width:180px;max-width:280px;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="text" placeholder="Figüran, oyun ara..." value="${escHtml(search)}" oninput="figuranSearch(this.value)">
+            </div>
+            <button class="btn btn-outline" onclick="figuranExcel()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Excel
+            </button>
+          </div>
+
+          <div class="card">
+            ${tab==='liste' ? (fL.length===0?`<div class="empty"><p>Kayıt bulunamadı</p></div>`:
+              `<div class="tbl-wrap"><table>
+                <thead><tr>${listeHeaders.map(h=>`<th>${escHtml(h)}</th>`).join('')}</tr></thead>
+                <tbody>${fL.map(row=>`<tr>${listeHeaders.map((_,i)=>{
+                  const v=String(row[i]??'');
+                  const h=listeHeaders[i]?.toLowerCase()||'';
+                  if(h.includes('oyun'))return `<td>${v.split(',').map(o=>`<span class="badge badge-purple" style="margin-right:3px;">${escHtml(o.trim())}</span>`).join('')}</td>`;
+                  if(h.includes('sıra')||h.includes('no'))return `<td style="color:var(--muted-fg);font-size:11px;">${escHtml(v)}</td>`;
+                  return `<td style="font-weight:500;">${escHtml(v)}</td>`;
+                }).join('')}</tr>`).join('')}</tbody>
+              </table></div>`) :
+            (fO.length===0?`<div class="empty"><p>Figüran kaydı bulunamadı</p></div>`:
+              `<div class="tbl-wrap"><table>
+                <thead><tr><th>#</th><th>Oyun</th><th>Kişi</th><th>Görev</th><th>Kategori</th></tr></thead>
+                <tbody>${fO.map((r,i)=>`<tr>
+                  <td style="color:var(--muted-fg);font-size:11px;">${i+1}</td>
+                  <td><span class="badge badge-purple">${escHtml(r.oyun)}</span></td>
+                  <td style="font-weight:500;">${escHtml(r.kisi)}</td>
+                  <td style="color:var(--muted-fg);font-size:12px;">${escHtml(r.gorev)}</td>
+                  <td><span class="badge ${categoryBadge(r.kategori)}">${escHtml(r.kategori)}</span></td>
+                </tr>`).join('')}</tbody>
+              </table></div>`)}
+          </div>
+        </div>
+        </div>`;
+    }
+
+    window.figuranTab = t => { tab=t; renderAll(); };
+    window.figuranSearch = v => { search=v; renderAll(); };
+    window.figuranExcel = () => {
+      let tsv='';
+      if(tab==='liste'){
+        const fL=getFilteredListe();
+        tsv=[listeHeaders.join('\t'),...fL.map(row=>listeHeaders.map((_,i)=>String(row[i]??'')).join('\t'))].join('\n');
+      } else {
+        const fO=getFilteredOyun();
+        tsv=['Oyun\tKişi\tGörev\tKategori',...fO.map(r=>`${r.oyun}\t${r.kisi}\t${r.gorev}\t${r.kategori}`)].join('\n');
+      }
+      navigator.clipboard.writeText(tsv).then(()=>alert('Kopyalandı!'));
+    };
+    renderAll();
+  } catch(e) {
+    pg.innerHTML = `<div class="empty"><p>Veri yüklenemedi: ${e.message}</p></div>`;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   GRAFİKLER
+═══════════════════════════════════════════════════════════════ */
+async function renderGrafik() {
+  const pg = document.getElementById('page');
+  try {
+    const data = await fetchSheet('BÜTÜN OYUNLAR');
+    const allRows = parsePlayRows(data.headers, data.rows);
+    const people = groupByPerson(allRows);
+
+    // Aktif kişiler
+    const topKisi = people.filter(p=>p.aktif).slice(0,25).map(p=>({name:p.name,value:p.oyunlar.length}));
+    const sortedPlays = groupByPlay(allRows.filter(r=>r.aktif)).sort((a,b)=>b.personelCount-a.personelCount);
+    const oyunBuyuk = sortedPlays.slice(0,20).map(p=>({name:p.name.length>28?p.name.slice(0,26)+'…':p.name,fullName:p.name,value:p.personelCount}));
+    const oyunKucuk = [...sortedPlays].reverse().slice(0,20).map(p=>({name:p.name.length>28?p.name.slice(0,26)+'…':p.name,fullName:p.name,value:p.personelCount}));
+
+    const katCounts = new Map();
+    allRows.filter(r=>r.aktif).forEach(r=>{const k=r.kategori.trim();if(k)katCounts.set(k,(katCounts.get(k)||0)+1);});
+    const sortedKat = Array.from(katCounts.entries()).sort((a,b)=>b[1]-a[1]);
+    const TOP=12;
+    const katData = sortedKat.slice(0,TOP);
+    const diger = sortedKat.slice(TOP).reduce((s,([,v])=>s+v),0);
+    if(diger>0) katData.push(['Diğer',diger]);
+    const kategoriData = katData.map(([name,value])=>({name,value}));
+
+    let activeChart = 'kisi';
+    let oyunSubTab = 'buyuk';
+    let activeKatIdx = 0;
+
+    function getKatPersons(idx) {
+      if(!kategoriData[idx]) return [];
+      const katName=kategoriData[idx].name;
+      const byP=new Map();
+      const aktifRows=allRows.filter(r=>r.aktif);
+      if(katName==='Diğer'){
+        const topNames=new Set(kategoriData.filter(k=>k.name!=='Diğer').map(k=>k.name));
+        aktifRows.filter(r=>r.kategori.trim()&&!topNames.has(r.kategori.trim())).forEach(r=>{
+          r.kisi.split(',').forEach(k=>{const t=k.trim();if(!t)return;if(!byP.has(t))byP.set(t,new Set());byP.get(t).add(r.kategori.trim());});
+        });
+      } else {
+        aktifRows.filter(r=>r.kategori.trim()===katName).forEach(r=>{
+          r.kisi.split(',').forEach(k=>{const t=k.trim();if(!t)return;if(!byP.has(t))byP.set(t,new Set());byP.get(t).add(r.gorev);});
+        });
+      }
+      return Array.from(byP.entries()).map(([name,roles])=>({name,roles:Array.from(roles)})).sort((a,b)=>a.name.localeCompare(b.name,'tr'));
+    }
+
+    function renderAll() {
+      const katPersons = getKatPersons(activeKatIdx);
+      pg.innerHTML = `
+        <div style="flex:1;overflow-y:auto;">
+        <div style="padding:12px 16px;border-bottom:1px solid var(--border);background:var(--card);display:flex;flex-wrap:wrap;align-items:center;gap:10px;justify-content:space-between;">
+          <div class="tab-bar">
+            ${[['kisi','En Çok Oyuna Katılanlar'],['oyun','Oyun Kadroları'],['kategori','Kategori Dağılımı']].map(([k,l])=>`
+              <button class="tab-btn${activeChart===k?' active':''}" onclick="grafikTab(${jsq(k)})">${l}</button>`).join('')}
+          </div>
+          <button class="btn btn-outline" onclick="grafikExcel()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Excel
+          </button>
+        </div>
+
+        <div style="padding:16px;max-width:900px;display:flex;flex-direction:column;gap:16px;">
+          ${activeChart==='kisi'?`
+          <div class="card" style="padding:16px;">
+            <h3 style="font-size:13px;font-weight:700;margin-bottom:4px;">En Çok Oyuna Katılan 25 Kişi</h3>
+            <p style="font-size:11px;color:var(--muted-fg);margin-bottom:14px;">Çubuğa tıklayarak personel dağılımına gidin</p>
+            <div style="overflow-x:auto;">
+              <canvas id="chart-kisi" style="max-height:580px;"></canvas>
+            </div>
+          </div>`:''}
+
+          ${activeChart==='oyun'?`
+          <div class="card" style="padding:16px;">
+            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px;">
+              <h3 style="font-size:13px;font-weight:700;">Oyun Kadroları</h3>
+              <div style="display:flex;border:1px solid var(--border);border-radius:7px;overflow:hidden;">
+                <button onclick="grafikOyunSub('buyuk')" style="padding:5px 12px;font-size:11px;font-weight:700;transition:all 0.15s;${oyunSubTab==='buyuk'?'background:var(--sidebar);color:var(--sidebar-primary);':'color:var(--muted-fg);'}">En Büyük 20</button>
+                <button onclick="grafikOyunSub('kucuk')" style="padding:5px 12px;font-size:11px;font-weight:700;border-left:1px solid var(--border);transition:all 0.15s;${oyunSubTab==='kucuk'?'background:var(--sidebar);color:var(--sidebar-primary);':'color:var(--muted-fg);'}">En Küçük 20</button>
+              </div>
+              <p style="font-size:11px;color:var(--muted-fg);">Tıklayarak oyuna gidin</p>
+            </div>
+            <div style="overflow-x:auto;">
+              <canvas id="chart-oyun" style="max-height:540px;"></canvas>
+            </div>
+          </div>`:''}
+
+          ${activeChart==='kategori'?`
+          <div class="card" style="padding:16px;">
+            <h3 style="font-size:13px;font-weight:700;margin-bottom:4px;">Kategori Dağılımı</h3>
+            <p style="font-size:11px;color:var(--muted-fg);margin-bottom:14px;">Kategoriye tıklayarak o kategorideki kişileri görün</p>
+            <div style="display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start;">
+              <div style="width:260px;min-width:220px;flex-shrink:0;">
+                <canvas id="chart-kat" style="max-height:260px;"></canvas>
+              </div>
+              <div style="flex:1;min-width:200px;display:grid;grid-template-columns:1fr 1fr;gap:4px;">
+                ${kategoriData.map((item,i)=>`<button onclick="grafikKatSelect(${i})" style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:7px;text-align:left;border:1px solid ${activeKatIdx===i?'var(--border)':'transparent'};background:${activeKatIdx===i?'hsla(38,18%,92%,0.5)':'transparent'};">
+                  <div style="width:10px;height:10px;border-radius:3px;background:${PALETTE[i%PALETTE.length]};flex-shrink:0;"></div>
+                  <span style="font-size:11px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(item.name)}</span>
+                  <span style="font-size:11px;font-weight:700;color:${PALETTE[i%PALETTE.length]};flex-shrink:0;">${item.value}</span>
+                </button>`).join('')}
+              </div>
+              ${katPersons.length?`
+              <div style="width:100%;max-width:300px;border:1px solid var(--border);border-radius:10px;padding:12px;background:hsla(38,18%,92%,0.1);">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+                  <div style="width:10px;height:10px;border-radius:3px;background:${PALETTE[activeKatIdx%PALETTE.length]};flex-shrink:0;"></div>
+                  <h4 style="font-size:12px;font-weight:700;flex:1;">${escHtml(kategoriData[activeKatIdx]?.name||'')}</h4>
+                  <span style="font-size:11px;color:var(--muted-fg);">${katPersons.length} kişi</span>
+                  <button onclick="grafikKatCopy()" style="padding:4px;border-radius:5px;color:var(--muted-fg);" title="Kopyala">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                  </button>
+                </div>
+                <div style="max-height:360px;overflow-y:auto;display:flex;flex-direction:column;gap:2px;">
+                  ${katPersons.map(({name,roles})=>`<button onclick="navigateTo('dagilim',{kisi:${jsq(name)}})" style="text-align:left;padding:7px 10px;border-radius:7px;transition:background 0.1s;" onmouseover="this.style.background='hsla(38,18%,92%,0.5)'" onmouseout="this.style.background=''">
+                    <p style="font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(name)}</p>
+                    <p style="font-size:10px;color:var(--muted-fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(roles.join(', '))}</p>
+                  </button>`).join('')}
+                </div>
+              </div>`:''
+              }
+            </div>
+          </div>`:''}
+        </div>
+        </div>`;
+
+      // Chart.js render
+      requestAnimationFrame(() => {
+        if (activeChart==='kisi') {
+          const canvas = document.getElementById('chart-kisi');
+          if (!canvas) return;
+          canvas.height = Math.max(topKisi.length * 22, 200);
+          chartInstances['kisi'] = new Chart(canvas, {
+            type:'bar',
+            data:{
+              labels:topKisi.map(d=>d.name),
+              datasets:[{data:topKisi.map(d=>d.value),backgroundColor:topKisi.map((_,i)=>PALETTE[i%PALETTE.length]+'DD'),borderRadius:4}]
+            },
+            options:{
+              indexAxis:'y',responsive:true,maintainAspectRatio:false,
+              plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.parsed.x} oyun`}}},
+              scales:{x:{ticks:{font:{size:10}}},y:{ticks:{font:{size:10}}}},
+              onClick:(_,elements)=>{
+                if(elements.length){ const name=topKisi[elements[0].index].name; navigateTo('dagilim',{kisi:name}); }
+              }
+            }
+          });
+        }
+        if (activeChart==='oyun') {
+          const canvas = document.getElementById('chart-oyun');
+          if (!canvas) return;
+          const src = oyunSubTab==='buyuk'?oyunBuyuk:oyunKucuk;
+          canvas.height = Math.max(src.length * 22, 200);
+          chartInstances['oyun'] = new Chart(canvas, {
+            type:'bar',
+            data:{
+              labels:src.map(d=>d.name),
+              datasets:[{data:src.map(d=>d.value),backgroundColor:src.map((_,i)=>PALETTE[i%PALETTE.length]+'DD'),borderRadius:4}]
+            },
+            options:{
+              indexAxis:'y',responsive:true,maintainAspectRatio:false,
+              plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.parsed.x} kişi`}}},
+              scales:{x:{ticks:{font:{size:10}}},y:{ticks:{font:{size:9}}}},
+              onClick:(_,elements)=>{
+                if(elements.length){ const play=src[elements[0].index].fullName; navigateTo('home',{oyun:play}); }
+              }
+            }
+          });
+        }
+        if (activeChart==='kategori') {
+          const canvas = document.getElementById('chart-kat');
+          if (!canvas) return;
+          chartInstances['kat'] = new Chart(canvas, {
+            type:'doughnut',
+            data:{
+              labels:kategoriData.map(d=>d.name),
+              datasets:[{data:kategoriData.map(d=>d.value),backgroundColor:kategoriData.map((_,i)=>PALETTE[i%PALETTE.length])}]
+            },
+            options:{
+              responsive:true,maintainAspectRatio:false,
+              plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${ctx.parsed}`}}},
+              onClick:(_,elements)=>{ if(elements.length){ activeKatIdx=elements[0].index; renderAll(); } }
+            }
+          });
+        }
+      });
+    }
+
+    window.grafikTab = t => { activeChart=t; renderAll(); };
+    window.grafikOyunSub = t => { oyunSubTab=t; renderAll(); };
+    window.grafikKatSelect = i => { activeKatIdx=i; renderAll(); };
+    window.grafikKatCopy = () => {
+      const kp=getKatPersons(activeKatIdx);
+      const katName=kategoriData[activeKatIdx]?.name||'';
+      const lines=[`Kategori: ${katName}`,'',...kp.map(({name,roles})=>`${name}\t${roles.join(', ')}`)];
+      navigator.clipboard.writeText(lines.join('\n')).then(()=>alert('Kopyalandı!'));
+    };
+    window.grafikExcel = () => {
+      let tsv='';
+      if(activeChart==='kisi') tsv=['Kişi\tOyun Sayısı',...topKisi.map(d=>`${d.name}\t${d.value}`)].join('\n');
+      else if(activeChart==='oyun'){const src=oyunSubTab==='buyuk'?oyunBuyuk:oyunKucuk;tsv=['Oyun\tPersonel Sayısı',...src.map(d=>`${d.fullName}\t${d.value}`)].join('\n');}
+      else tsv=['Kategori\tSayı',...kategoriData.map(d=>`${d.name}\t${d.value}`)].join('\n');
+      navigator.clipboard.writeText(tsv).then(()=>alert('Kopyalandı!'));
+    };
+
+    renderAll();
+  } catch(e) {
+    pg.innerHTML = `<div class="empty"><p>Veri yüklenemedi: ${e.message}</p></div>`;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   MÜSAİT PERSONEL (gorevli-olmayan)
+═══════════════════════════════════════════════════════════════ */
+async function renderMusait() {
+  const SHEET = 'GÖREVLİ OLMAYAN';
+  const DEFAULT_HEADERS = ['Kişi','Kategori','Başlangıç','Bitiş','Açıklama'];
+  const pg = document.getElementById('page');
+
+  let sheetData = null;
+  let search = '';
+  let addActive = false;
+  let addValues = [];
+  let deleteConfirm = null;
+  let saving = false;
+
+  async function load() {
+    sheetData = await fetchSheet(SHEET);
+  }
+
+  function getHeaders() { return (sheetData?.headers?.length ? sheetData.headers : DEFAULT_HEADERS); }
+  function getRows() { return sheetData?.rows || []; }
+
+  function getFiltered() {
+    const rows = getRows();
+    if (!search.trim()) return rows;
+    const lower = trLower(search);
+    return rows.filter(row=>row.some(c=>trLower(String(c??'')).includes(lower)));
+  }
+
+  function render() {
+    const headers = getHeaders();
+    const rows = getRows();
+    const filtered = getFiltered();
+
+    pg.innerHTML = `
+      <div class="fullpage">
+        <div class="fullpage-header">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--sidebar-primary)" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="17" y1="11" x2="23" y2="11"/></svg>
+            <div>
+              <h1 style="font-size:14px;font-weight:700;">Müsait Personel</h1>
+              <p style="font-size:11px;color:var(--muted-fg);">${rows.length} kayıt</p>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-outline" style="padding:5px 8px;" onclick="musaitYenile()" title="Yenile">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+            </button>
+            <button class="btn btn-primary" onclick="musaitAddStart()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Kişi Ekle
+            </button>
+          </div>
+        </div>
+        <div class="fullpage-search">
+          <div class="search-wrap" style="max-width:300px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" placeholder="Ara…" value="${escHtml(search)}" oninput="musaitSearch(this.value)" id="musait-search">
+          </div>
+        </div>
+        <div class="fullpage-body">
+          <table style="width:100%;">
+            <thead>
+              <tr>
+                <th style="width:36px;">#</th>
+                ${headers.map(h=>`<th>${escHtml(h)}</th>`).join('')}
+                <th style="width:36px;"></th>
+              </tr>
+            </thead>
+            <tbody>
+              ${addActive?`<tr class="inline-add-row">
+                <td style="padding:8px 10px;">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                </td>
+                ${headers.map((h,i)=>`<td style="padding:5px 5px;"><input class="inline-input" placeholder="${escHtml(h)}" value="${escHtml(addValues[i]||'')}" oninput="musaitAddVal(${i},this.value)" onkeydown="musaitAddKey(event,${i},${headers.length})" id="add-input-${i}"></td>`).join('')}
+                <td style="padding:5px;"><div style="display:flex;gap:4px;">
+                  <button onclick="musaitAddSave()" style="width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--primary);">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                  </button>
+                  <button onclick="musaitAddCancel()" style="width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--muted-fg);">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  </button>
+                </div></td>
+              </tr>`:''}
+              ${filtered.length===0&&!addActive?`<tr><td colspan="${headers.length+2}" style="text-align:center;padding:40px;color:var(--muted-fg);font-size:13px;">${search?'Arama sonucu bulunamadı':'Henüz kayıt yok'}</td></tr>`:''}
+              ${filtered.map(row=>{
+                const realIdx = getRows().indexOf(row);
+                const isDel = deleteConfirm===realIdx;
+                return `<tr style="cursor:default;" class="row-hover-group">
+                  <td style="color:var(--muted-fg);font-size:11px;padding:9px 12px;opacity:0.5;">${realIdx+1}</td>
+                  ${headers.map((_,i)=>`<td style="padding:9px 12px;font-size:13px;">${escHtml(String(row[i]??''))}</td>`).join('')}
+                  <td style="padding:6px;text-align:right;">
+                    ${isDel?`<div class="delete-confirm">
+                      <button class="confirm-yes" onclick="musaitDeleteConfirm(${realIdx})">Sil</button>
+                      <button onclick="musaitDeleteCancel()" style="padding:4px;color:var(--muted-fg);">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                      </button>
+                    </div>`:
+                    `<button onclick="musaitDeleteStart(${realIdx})" style="opacity:0;padding:5px;border-radius:5px;color:var(--muted-fg);transition:all 0.1s;" class="del-btn" onmouseover="this.style.opacity='1';this.style.background='hsl(0,70%,95%)';this.style.color='hsl(0,65%,45%)'" onmouseout="this.style.opacity='0';this.style.background='';this.style.color='var(--muted-fg)'">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                    </button>`}
+                  </td>
+                </tr>`;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>`;
+    if (addActive) setTimeout(()=>document.getElementById('add-input-0')?.focus(),50);
+  }
+
+  window.musaitSearch = v => { search=v; render(); };
+  window.musaitYenile = async () => { delete CACHE[SHEET]; await load(); render(); };
+  window.musaitAddStart = () => { addValues=getHeaders().map(()=>''); addActive=true; render(); };
+  window.musaitAddCancel = () => { addActive=false; render(); };
+  window.musaitAddVal = (i,v) => { addValues[i]=v; };
+  window.musaitAddKey = (e,i,total) => {
+    if(e.key==='Tab'){e.preventDefault();const n=e.shiftKey?i-1:i+1;if(n>=0&&n<total)document.getElementById(`add-input-${n}`)?.focus();else if(n>=total)musaitAddSave();}
+    if(e.key==='Enter'){if(i<total-1)document.getElementById(`add-input-${i+1}`)?.focus();else musaitAddSave();}
+    if(e.key==='Escape')musaitAddCancel();
+  };
+  window.musaitAddSave = async () => {
+    if(saving) return;
+    const vals = getHeaders().map((_,i)=>addValues[i]||'');
+    if(!vals.some(v=>v.trim())){musaitAddCancel();return;}
+    saving=true;
+    try{
+      const isNew = !sheetData?.headers?.length;
+      if(isNew) await postRow(SHEET, DEFAULT_HEADERS);
+      await postRow(SHEET, vals);
+      await load(); addActive=false; saving=false; render();
+    } catch(e){saving=false;alert('Kayıt eklenemedi: '+e.message);}
+  };
+  window.musaitDeleteStart = i => { deleteConfirm=i; render(); };
+  window.musaitDeleteCancel = () => { deleteConfirm=null; render(); };
+  window.musaitDeleteConfirm = async i => {
+    try{ await deleteRow(SHEET,i); await load(); deleteConfirm=null; render(); }
+    catch(e){ alert('Silinemedi: '+e.message); }
+  };
+
+  try { await load(); render(); } catch(e) {
+    pg.innerHTML = `<div class="empty"><p>Veri yüklenemedi: ${e.message}</p></div>`;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ARŞİV OYUNLAR
+═══════════════════════════════════════════════════════════════ */
+async function renderArsiv() {
+  const SHEET = 'ARŞİV OYUNLAR';
+  const pg = document.getElementById('page');
+
+  let sheetData = null;
+  let search = '';
+  let expanded = null;
+  let addActive = false;
+  let addValues = ['','','',''];
+  let deleteConfirm = null;
+  let saving = false;
+
+  async function load() { sheetData = await fetchSheet(SHEET); }
+
+  function getRows() { return sheetData?.rows || []; }
+  function getHeaders() { return sheetData?.headers || ['Oyun Adı','Kategori','Görev','Kişi']; }
+
+  function getParsedRows() {
+    if(!sheetData) return [];
+    return parsePlayRows(sheetData.headers, sheetData.rows);
+  }
+  function getPlays() { return groupByPlay(getParsedRows()); }
+
+  function getFiltered() {
+    const plays = getPlays();
+    const rows = getParsedRows();
+    if(!search.trim()) return plays;
+    const lower = trLower(search.trim());
+    return plays.filter(p=>trLower(p.name).includes(lower)||rows.filter(r=>r.oyun===p.name).some(r=>trLower(r.kisi).includes(lower)||trLower(r.gorev).includes(lower)));
+  }
+
+  function render() {
+    const filtered = getFiltered();
+    const rows = getParsedRows();
+    const rawRows = getRows();
+
+    pg.innerHTML = `
+      <div class="fullpage">
+        <div class="fullpage-header">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--sidebar-primary)" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+            <div>
+              <h1 style="font-size:14px;font-weight:700;">Arşiv Oyunlar</h1>
+              <p style="font-size:11px;color:var(--muted-fg);">${getPlays().length} oyun · ${rawRows.length} kayıt</p>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-outline" style="padding:5px 8px;" onclick="arsivYenile()" title="Yenile">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+            </button>
+            <button class="btn btn-primary" onclick="arsivAddStart()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Kayıt Ekle
+            </button>
+          </div>
+        </div>
+        <div class="fullpage-search">
+          <div class="search-wrap" style="max-width:300px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" placeholder="Oyun, kişi, görev ara…" value="${escHtml(search)}" oninput="arsivSearch(this.value)">
+          </div>
+        </div>
+
+        ${addActive?`<div style="padding:12px 14px;border-bottom:2px solid hsla(350,68%,40%,0.3);background:hsla(350,68%,40%,0.04);">
+          <p style="font-size:11px;font-weight:700;color:var(--primary);margin-bottom:8px;">+ Yeni Kayıt Ekle</p>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;">
+            ${['Oyun Adı','Kategori','Görev','Kişi'].map((h,i)=>`<div>
+              <p style="font-size:9px;color:var(--muted-fg);margin-bottom:3px;">${h}</p>
+              <input class="inline-input" placeholder="${h}" value="${escHtml(addValues[i]||'')}" oninput="arsivAddVal(${i},this.value)" onkeydown="arsivAddKey(event,${i})" id="arsiv-add-${i}">
+            </div>`).join('')}
+          </div>
+          <div style="display:flex;gap:8px;margin-top:8px;">
+            <button class="btn btn-primary" onclick="arsivAddSave()" style="font-size:12px;">Kaydet</button>
+            <button class="btn btn-outline" onclick="arsivAddCancel()" style="font-size:12px;">İptal</button>
+          </div>
+        </div>`:''}
+
+        <div class="fullpage-body" style="padding:12px;">
+          ${filtered.length===0?`<div class="empty"><p>${search?'Arama sonucu bulunamadı':'Arşiv boş'}</p></div>`:''}
+          ${filtered.map(play=>{
+            const isOpen = expanded===play.name;
+            const playRows = rows.filter(r=>r.oyun===play.name);
+            const child = isChildPlay(play.name);
+            return `<div class="arsiv-play-card">
+              <div class="arsiv-play-header" onclick="arsivToggle(${jsq(play.name)})">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--muted-fg)" stroke-width="2"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="19" x2="5" y2="5"/></svg>
+                <div style="flex:1;min-width:0;">
+                  <div style="display:flex;align-items:center;gap:8px;">
+                    <span style="font-size:13px;font-weight:700;">${escHtml(play.name)}</span>
+                    ${child?'<span style="font-size:10px;font-weight:700;color:hsl(155,65%,38%);background:hsla(155,65%,38%,0.1);padding:2px 6px;border-radius:4px;">Ç.O</span>':''}
+                  </div>
+                  <p style="font-size:11px;color:var(--muted-fg);margin-top:2px;">${play.personelCount} kişi · ${play.rowCount} kayıt</p>
+                </div>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--muted-fg)" stroke-width="2" style="flex-shrink:0;transform:${isOpen?'rotate(180deg)':'rotate(0)'};transition:transform 0.2s;"><polyline points="6 9 12 15 18 9"/></svg>
+              </div>
+              ${isOpen?`<div style="border-top:1px solid var(--border);">
+                <table style="width:100%;">
+                  <thead><tr style="background:hsla(38,18%,92%,0.5);">
+                    <th style="padding:7px 12px;font-size:10px;font-weight:700;text-align:left;color:var(--muted-fg);">#</th>
+                    <th style="padding:7px 12px;font-size:10px;font-weight:700;text-align:left;color:var(--muted-fg);">Kişi</th>
+                    <th style="padding:7px 12px;font-size:10px;font-weight:700;text-align:left;color:var(--muted-fg);">Görev</th>
+                    <th style="padding:7px 12px;font-size:10px;font-weight:700;text-align:left;color:var(--muted-fg);">Kategori</th>
+                    <th style="width:36px;"></th>
+                  </tr></thead>
+                  <tbody>
+                    ${playRows.map((row,i)=>{
+                      const realIdx = rawRows.findIndex(rr=>String(rr[0])===row.oyun&&String(rr[2])===row.gorev&&String(rr[3])===row.kisi);
+                      const isDel = deleteConfirm===realIdx;
+                      return `<tr style="border-top:1px solid hsla(38,18%,87%,0.5);">
+                        <td style="padding:7px 12px;color:var(--muted-fg);font-size:11px;opacity:0.5;">${i+1}</td>
+                        <td style="padding:7px 12px;font-weight:500;font-size:12px;">${escHtml(row.kisi)}</td>
+                        <td style="padding:7px 12px;font-size:12px;color:var(--muted-fg);">${escHtml(row.gorev)}</td>
+                        <td style="padding:7px 12px;"><span class="badge ${categoryBadge(row.kategori)}">${escHtml(row.kategori)}</span></td>
+                        <td style="padding:5px;">
+                          ${isDel?`<div class="delete-confirm">
+                            <button class="confirm-yes" onclick="arsivDeleteConfirm(${realIdx})">Sil</button>
+                            <button onclick="arsivDeleteCancel()" style="padding:4px;color:var(--muted-fg);">✕</button>
+                          </div>`:
+                          `<button onclick="arsivDeleteStart(${realIdx})" style="opacity:0;padding:5px;border-radius:5px;color:var(--muted-fg);" onmouseover="this.style.opacity='1';this.style.background='hsl(0,70%,95%)';this.style.color='hsl(0,65%,45%)'" onmouseout="this.style.opacity='0';this.style.background='';this.style.color='var(--muted-fg)'">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                          </button>`}
+                        </td>
+                      </tr>`;
+                    }).join('')}
+                  </tbody>
+                </table>
+              </div>`:''}
+            </div>`;
+          }).join('')}
+        </div>
+      </div>`;
+    if (addActive) setTimeout(()=>document.getElementById('arsiv-add-0')?.focus(),50);
+  }
+
+  window.arsivSearch = v => { search=v; render(); };
+  window.arsivToggle = name => { expanded=expanded===name?null:name; render(); };
+  window.arsivYenile = async () => { delete CACHE[SHEET]; await load(); render(); };
+  window.arsivAddStart = () => { addValues=['','','','']; addActive=true; render(); };
+  window.arsivAddCancel = () => { addActive=false; render(); };
+  window.arsivAddVal = (i,v) => { addValues[i]=v; };
+  window.arsivAddKey = (e,i) => {
+    if(e.key==='Tab'){e.preventDefault();const n=e.shiftKey?i-1:i+1;if(n>=0&&n<4)document.getElementById(`arsiv-add-${n}`)?.focus();else if(n>=4)arsivAddSave();}
+    if(e.key==='Enter'){if(i<3)document.getElementById(`arsiv-add-${i+1}`)?.focus();else arsivAddSave();}
+    if(e.key==='Escape')arsivAddCancel();
+  };
+  window.arsivAddSave = async () => {
+    if(saving) return;
+    if(!addValues.some(v=>v.trim())){arsivAddCancel();return;}
+    saving=true;
+    try{ await postRow(SHEET,addValues); await load(); addActive=false; saving=false; render(); }
+    catch(e){saving=false;alert('Kayıt eklenemedi: '+e.message);}
+  };
+  window.arsivDeleteStart = i => { deleteConfirm=i; render(); };
+  window.arsivDeleteCancel = () => { deleteConfirm=null; render(); };
+  window.arsivDeleteConfirm = async i => {
+    try{ await deleteRow(SHEET,i); await load(); deleteConfirm=null; render(); }
+    catch(e){alert('Silinemedi: '+e.message);}
+  };
+
+  try { await load(); render(); } catch(e) {
+    pg.innerHTML = `<div class="empty"><p>Veri yüklenemedi: ${e.message}</p></div>`;
+  }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   ADMİN PANELİ
+═══════════════════════════════════════════════════════════════ */
+async function renderAdmin() {
+  const pg = document.getElementById('page');
+  const ROWS_PER_PAGE = 50;
+  const PINNED = ['GÖREVLİ OLMAYAN','ARŞİV OYUNLAR','FİGÜRAN LİSTESİ'];
+
+  // Şifre kontrolü
+  const PIN_KEY = 'idt_pin';
+  const AUTH_KEY = 'idt_admin_auth';
+  const DEFAULT_PIN = '525327';
+  function getPin(){ return localStorage.getItem(PIN_KEY)||DEFAULT_PIN; }
+  function isAuth(){ return sessionStorage.getItem(AUTH_KEY)==='1'; }
+  function setAuth(){ sessionStorage.setItem(AUTH_KEY,'1'); }
+
+  if (!isAuth()) {
+    pg.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:center;height:100%;">
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:32px;width:320px;display:flex;flex-direction:column;gap:16px;">
+          <h2 style="font-size:18px;font-weight:800;text-align:center;">🔒 Admin Girişi</h2>
+          <input type="password" id="admin-pin" placeholder="Şifre..." style="height:40px;padding:0 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;background:var(--background);outline:none;" onkeydown="if(event.key==='Enter')adminLogin()">
+          <div id="admin-pin-err" style="font-size:12px;color:hsl(0,65%,50%);text-align:center;min-height:16px;"></div>
+          <button onclick="adminLogin()" style="height:40px;background:var(--sidebar);color:var(--sidebar-primary);border-radius:8px;font-size:13px;font-weight:700;">Giriş Yap</button>
+        </div>
+      </div>`;
+    window.adminLogin = () => {
+      const inp = document.getElementById('admin-pin');
+      if(inp.value===getPin()){setAuth();renderAdmin();}
+      else{document.getElementById('admin-pin-err').textContent='Hatalı şifre!';inp.value='';setTimeout(()=>document.getElementById('admin-pin-err').textContent='',2000);}
+    };
+    setTimeout(()=>document.getElementById('admin-pin')?.focus(),50);
+    return;
+  }
+
+  // Sheets listesi
+  let sheets = [];
+  let activeSheet = '';
+  let sheetData = null;
+  let search = '';
+  let page = 1;
+  let editCell = null; // {row, col}
+  let deleteRowIdx = null;
+  let insertAfterRow = null;
+  let currentPlayIdx = 0;
+
+  const PLAY_SHEETS = ['BÜTÜN OYUNLAR'];
+
+  async function loadSheets() {
+    try {
+      const r = await fetch(BACKEND+'/api/sheets');
+      const d = await r.json();
+      sheets = d.sheets || [];
+      // Pinned'ları sona ekle
+      PINNED.forEach(p => { if(!sheets.includes(p)) sheets.push(p); });
+      sheets = sheets.filter(s => !s.startsWith('__') && !s.startsWith('_SNAPSHOT') && s!=='LOG' && s!=='Log' && s!=='BİLDİRİMLER_ARŞİV' && s!=='BİLDİRİMLER');
+    } catch(e) { sheets = PINNED; }
+  }
+
+  async function loadSheet(name) {
+    sheetData = null;
+    delete CACHE[name];
+    try { sheetData = await fetchSheet(name); }
+    catch(e) { sheetData = {headers:[],rows:[]}; }
+    page = 1; editCell = null; deleteRowIdx = null; currentPlayIdx = 0;
+  }
+
+  function isPlayBased(name) { return PLAY_SHEETS.includes(name); }
+
+  function getHeaders() {
+    if(!sheetData) return [];
+    return isPlayBased(activeSheet) ? sheetData.headers.slice(0,4) : sheetData.headers;
+  }
+
+  function getFilteredRows() {
+    if(!sheetData) return [];
+    if(!search.trim()) return sheetData.rows;
+    const lower = trLower(search);
+    return sheetData.rows.filter(row=>row.some(c=>trLower(String(c??'')).includes(lower)));
+  }
+
+  function getPlayGroups() {
+    if(!isPlayBased(activeSheet)||!sheetData) return null;
+    const map=new Map();
+    sheetData.rows.forEach(row=>{
+      const play=String(row[0]??'').trim();
+      if(!map.has(play))map.set(play,[]);
+      map.get(play).push(row);
+    });
+    return Array.from(map.entries()).map(([name,rows])=>({name,rows})).sort((a,b)=>a.name.localeCompare(b.name,'tr'));
+  }
+
+  function getPagedRows() {
+    const filtered = getFilteredRows();
+    if(isPlayBased(activeSheet)&&!search.trim()) {
+      const groups=getPlayGroups()||[];
+      return groups[currentPlayIdx]?.rows||[];
+    }
+    return filtered.slice((page-1)*ROWS_PER_PAGE, page*ROWS_PER_PAGE);
+  }
+
+  function render() {
+    const headers=getHeaders();
+    const paged=getPagedRows();
+    const filtered=getFilteredRows();
+    const totalPages=Math.max(1,Math.ceil(filtered.length/ROWS_PER_PAGE));
+    const groups=getPlayGroups();
+    const isPlay=isPlayBased(activeSheet);
+    const curPlayName=isPlay&&groups?groups[currentPlayIdx]?.name||'':'';
+
+    pg.innerHTML = `
+      <div style="display:flex;flex-direction:column;height:100%;overflow:hidden;">
+        <!-- Toolbar -->
+        <div style="padding:8px 14px;border-bottom:1px solid var(--border);background:var(--card);display:flex;align-items:center;gap:10px;flex-wrap:wrap;flex-shrink:0;">
+          <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted-fg);">${escHtml(activeSheet||'—')}</span>
+          <div class="search-wrap" style="flex:1;min-width:150px;max-width:280px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" placeholder="Ara..." value="${escHtml(search)}" oninput="adminSearch(this.value)">
+          </div>
+          <button onclick="adminRefresh()" style="padding:5px;border-radius:6px;color:var(--muted-fg);" title="Yenile">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+          </button>
+          ${isPlay&&groups&&!search?`
+            <div style="display:flex;align-items:center;gap:6px;margin-left:4px;">
+              <button onclick="adminPlayPrev()" ${currentPlayIdx<=0?'disabled':''} style="padding:4px;border-radius:5px;color:var(--muted-fg);opacity:${currentPlayIdx<=0?'0.3':'1'};">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+              </button>
+              <select onchange="adminPlaySelect(this.value)" style="height:28px;font-size:11px;border:1px solid var(--border);border-radius:6px;background:var(--card);padding:0 6px;max-width:200px;">
+                ${(groups||[]).map((g,i)=>`<option value="${i}"${currentPlayIdx===i?' selected':''}>${escHtml(g.name)}</option>`).join('')}
+              </select>
+              <button onclick="adminPlayNext()" ${currentPlayIdx>=(groups?.length||1)-1?'disabled':''} style="padding:4px;border-radius:5px;color:var(--muted-fg);opacity:${currentPlayIdx>=(groups?.length||1)-1?'0.3':'1'};">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+              </button>
+              <span style="font-size:11px;color:var(--muted-fg);">${currentPlayIdx+1}/${groups?.length||0}</span>
+            </div>
+          `:''}
+          <div style="margin-left:auto;display:flex;align-items:center;gap:8px;">
+            <span style="font-size:11px;color:var(--muted-fg);">${sheetData?sheetData.rows.length+' satır':''}</span>
+            <button onclick="adminLogout()" style="font-size:11px;color:var(--muted-fg);padding:4px 8px;border:1px solid var(--border);border-radius:6px;">Çıkış</button>
+          </div>
+        </div>
+
+        <!-- Oyun başlık -->
+        ${isPlay&&curPlayName&&!search?`
+        <div style="padding:6px 14px;border-bottom:1px solid var(--border);background:hsla(38,18%,92%,0.3);display:flex;align-items:center;gap:8px;flex-shrink:0;">
+          <span style="font-size:12px;font-weight:700;">${escHtml(curPlayName)}</span>
+          <span style="font-size:11px;color:var(--muted-fg);">${paged.length} satır</span>
+          <button onclick="adminNewPlay()" style="margin-left:auto;font-size:11px;font-weight:700;padding:3px 10px;border:1px solid hsla(350,68%,40%,0.4);border-radius:6px;color:hsl(350,68%,40%);">+ Yeni Oyun</button>
+          <button onclick="adminArchivePlay()" style="font-size:11px;font-weight:700;padding:3px 10px;border:1px solid hsla(40,90%,45%,0.4);border-radius:6px;color:hsl(40,90%,45%);">📁 Arşive Taşı</button>
+        </div>`:''}
+
+        <!-- Tablo -->
+        <div style="flex:1;overflow:auto;">
+          <table style="width:100%;border-collapse:collapse;">
+            <thead style="position:sticky;top:0;z-index:10;">
+              <tr style="background:var(--muted);">
+                <th style="padding:8px 12px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:var(--muted-fg);width:40px;border-bottom:1px solid var(--border);">#</th>
+                ${headers.map(h=>`<th style="padding:8px 12px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:var(--muted-fg);white-space:nowrap;border-bottom:1px solid var(--border);">${escHtml(h)}</th>`).join('')}
+                <th style="width:32px;border-bottom:1px solid var(--border);"></th>
+              </tr>
+            </thead>
+            <tbody>
+              ${headers.length===0?`<tr><td colspan="99" style="text-align:center;padding:48px;color:var(--muted-fg);">Sayfa seçin veya henüz veri yok</td></tr>`:
+              paged.length===0?`<tr><td colspan="99" style="text-align:center;padding:48px;color:var(--muted-fg);">Sonuç bulunamadı</td></tr>`:
+              paged.map((row,ri)=>{
+                const realIdx=(sheetData?.rows||[]).indexOf(row);
+                const isDel=deleteRowIdx===realIdx;
+                const isEdit=editCell&&editCell.row===realIdx;
+                return `<tr style="border-bottom:1px solid hsla(38,18%,87%,0.6);${ri%2!==0?'background:hsla(38,18%,92%,0.25)':''}" onmouseover="this.style.background='hsla(38,18%,92%,0.5)'" onmouseout="this.style.background='${ri%2!==0?'hsla(38,18%,92%,0.25)':''}'">
+                  <td style="padding:7px 12px;font-size:11px;color:var(--muted-fg);opacity:0.5;">${realIdx+2}</td>
+                  ${headers.map((h,ci)=>{
+                    const val=String(row[ci]??'');
+                    const isEditThis=isEdit&&editCell.col===ci;
+                    return isEditThis?
+                      `<td style="padding:4px 8px;"><input id="cell-edit-input" value="${escHtml(val)}" style="width:100%;min-width:120px;height:30px;padding:0 8px;border:1px solid var(--primary);border-radius:5px;font-size:12px;background:var(--background);outline:none;" onkeydown="adminCellKey(event,${realIdx},${ci})" onblur="adminCellSave(${realIdx},${ci})"></td>`:
+                      `<td style="padding:7px 12px;max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;cursor:pointer;" onclick="adminEditCell(${realIdx},${ci})" title="${escHtml(val)}">${escHtml(val)||'<span style=\"opacity:0.2;font-style:italic;\">—</span>'}</td>`;
+                  }).join('')}
+                  <td style="padding:5px 8px;text-align:right;">
+                    ${isDel?`<div style="display:flex;align-items:center;gap:4px;">
+                      <button onclick="adminDeleteConfirm(${realIdx})" style="padding:2px 8px;background:#dc2626;color:#fff;border-radius:4px;font-size:10px;font-weight:700;">Sil</button>
+                      <button onclick="adminDeleteCancel()" style="padding:4px;color:var(--muted-fg);">✕</button>
+                    </div>`:
+                    `<button onclick="adminDeleteStart(${realIdx})" style="opacity:0;padding:5px;border-radius:5px;color:var(--muted-fg);" onmouseover="this.style.opacity='1';this.style.background='hsl(0,70%,95%)';this.style.color='hsl(0,65%,45%)'" onmouseout="this.style.opacity='0';this.style.background='';this.style.color='var(--muted-fg)'">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                    </button>`}
+                  </td>
+                </tr>`;
+              }).join('')}
+              <!-- Yeni satır ekle -->
+              ${headers.length>0&&!search?`<tr style="border-top:2px dashed hsla(38,18%,87%,0.8);" id="add-row-tr">
+                <td style="padding:8px 12px;color:var(--muted-fg);opacity:0.4;font-size:11px;">+</td>
+                ${headers.map((h,i)=>`<td style="padding:5px 6px;"><input class="inline-input" placeholder="${escHtml(h)}" id="new-row-${i}" onkeydown="adminAddKey(event,${i},${headers.length})" style="width:100%;min-width:80px;"></td>`).join('')}
+                <td style="padding:5px;"><button onclick="adminAddSave(${headers.length})" style="padding:5px 10px;background:var(--sidebar);color:var(--sidebar-primary);border-radius:6px;font-size:11px;font-weight:700;">Ekle</button></td>
+              </tr>`:''}
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        ${!isPlay&&headers.length>0?`<div style="padding:8px 14px;border-top:1px solid var(--border);background:hsla(38,18%,92%,0.3);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+          <span style="font-size:11px;color:var(--muted-fg);">${filtered.length>0?(page-1)*ROWS_PER_PAGE+1+'–'+Math.min(page*ROWS_PER_PAGE,filtered.length)+' / '+filtered.length+' satır':'0 satır'}</span>
+          <div style="display:flex;align-items:center;gap:4px;">
+            <button onclick="adminPagePrev()" ${page<=1?'disabled':''} style="padding:4px;border-radius:5px;color:${page<=1?'var(--muted-fg)':'var(--foreground)'};opacity:${page<=1?'0.3':'1'};">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+            </button>
+            <span style="font-size:11px;color:var(--muted-fg);padding:0 6px;">${page} / ${totalPages}</span>
+            <button onclick="adminPageNext(${totalPages})" ${page>=totalPages?'disabled':''} style="padding:4px;border-radius:5px;color:${page>=totalPages?'var(--muted-fg)':'var(--foreground)'};opacity:${page>=totalPages?'0.3':'1'};">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+          </div>
+        </div>`:''}
+
+        <!-- Sheet tabs -->
+        <div style="display:flex;align-items:flex-end;overflow-x:auto;padding:4px 12px 0;background:hsla(38,18%,92%,0.5);border-top:1px solid var(--border);flex-shrink:0;min-height:36px;">
+          ${sheets.map(name=>`<button onclick="adminSelectSheet(${jsq(name)})" style="padding:6px 12px;font-size:11px;font-weight:700;white-space:nowrap;border-radius:6px 6px 0 0;margin-right:2px;transition:all 0.15s;${activeSheet===name?'background:var(--card);border:1px solid var(--border);border-bottom:1px solid var(--card);margin-bottom:-1px;color:var(--foreground);':'background:transparent;color:var(--muted-fg);border:1px solid transparent;'}">${escHtml(name)}</button>`).join('')}
+        </div>
+      </div>`;
+
+    // Hücre edit input focus
+    if(editCell) setTimeout(()=>document.getElementById('cell-edit-input')?.focus(),30);
+  }
+
+  // API işlemleri
+  async function apiCellUpdate(row,col,value) {
+    const r=await fetch(BACKEND+'/api/sheets/'+encodeURIComponent(activeSheet)+'/cell',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({row,col,value})});
+    if(!r.ok) throw new Error('Güncelleme hatası');
+    delete CACHE[activeSheet];
+    sheetData=await fetchSheet(activeSheet);
+  }
+
+  async function apiRowDelete(rowIndex) {
+    const r=await fetch(BACKEND+'/api/sheets/'+encodeURIComponent(activeSheet)+'/row/'+rowIndex,{method:'DELETE'});
+    if(!r.ok) throw new Error('Silme hatası');
+    delete CACHE[activeSheet];
+    sheetData=await fetchSheet(activeSheet);
+  }
+
+  async function apiRowAdd(values) {
+    const r=await fetch(BACKEND+'/api/sheets/'+encodeURIComponent(activeSheet)+'/row',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({values})});
+    if(!r.ok) throw new Error('Ekleme hatası');
+    delete CACHE[activeSheet];
+    sheetData=await fetchSheet(activeSheet);
+  }
+
+  // Window fonksiyonları
+  window.adminSearch = v => { search=v; page=1; render(); };
+  window.adminRefresh = async () => { delete CACHE[activeSheet]; sheetData=await fetchSheet(activeSheet); render(); };
+  window.adminLogout = () => { sessionStorage.removeItem(AUTH_KEY); navigateTo('home'); };
+  window.adminSelectSheet = async name => { activeSheet=name; await loadSheet(name); render(); };
+  window.adminPlayPrev = () => { currentPlayIdx=Math.max(0,currentPlayIdx-1); render(); };
+  window.adminPlayNext = () => { const g=getPlayGroups()||[]; currentPlayIdx=Math.min(g.length-1,currentPlayIdx+1); render(); };
+  window.adminPlaySelect = i => { currentPlayIdx=Number(i); render(); };
+  window.adminPagePrev = () => { page=Math.max(1,page-1); render(); };
+  window.adminPageNext = total => { page=Math.min(total,page+1); render(); };
+  window.adminEditCell = (row,col) => { editCell={row,col}; render(); };
+  window.adminCellKey = async (e,row,col) => {
+    if(e.key==='Enter'||e.key==='Tab'){e.preventDefault();await adminCellSave(row,col);}
+    if(e.key==='Escape'){editCell=null;render();}
+  };
+  window.adminCellSave = async (row,col) => {
+    const inp=document.getElementById('cell-edit-input');
+    if(!inp){editCell=null;render();return;}
+    const val=inp.value;
+    const orig=String(sheetData?.rows[row]?.[col]??'');
+    if(val===orig){editCell=null;render();return;}
+    try{await apiCellUpdate(row,col,val);editCell=null;render();}
+    catch(e){alert('Güncellenemedi: '+e.message);editCell=null;render();}
+  };
+  window.adminDeleteStart = i => { deleteRowIdx=i; render(); };
+  window.adminDeleteCancel = () => { deleteRowIdx=null; render(); };
+  window.adminDeleteConfirm = async i => {
+    try{await apiRowDelete(i);deleteRowIdx=null;render();}
+    catch(e){alert('Silinemedi: '+e.message);deleteRowIdx=null;render();}
+  };
+  window.adminAddKey = (e,i,total) => {
+    if(e.key==='Tab'){e.preventDefault();const n=e.shiftKey?i-1:i+1;if(n>=0&&n<total)document.getElementById('new-row-'+n)?.focus();else if(n>=total)adminAddSave(total);}
+    if(e.key==='Enter'){if(i<total-1)document.getElementById('new-row-'+(i+1))?.focus();else adminAddSave(total);}
+    if(e.key==='Escape'){Array.from({length:total},(_,j)=>document.getElementById('new-row-'+j)?.value='');}
+  };
+  window.adminAddSave = async total => {
+    const vals=Array.from({length:total},(_,i)=>document.getElementById('new-row-'+i)?.value||'');
+    if(!vals.some(v=>v.trim())) return;
+    try{await apiRowAdd(vals);Array.from({length:total},(_,i)=>{const inp=document.getElementById('new-row-'+i);if(inp)inp.value='';});render();}
+    catch(e){alert('Eklenemedi: '+e.message);}
+  };
+  window.adminNewPlay = () => {
+    const name=prompt('Yeni oyun adı:');
+    if(name&&name.trim()) apiRowAdd([name.trim(),'','','']).then(()=>render());
+  };
+  window.adminArchivePlay = () => {
+    const groups=getPlayGroups()||[];
+    const playName=groups[currentPlayIdx]?.name;
+    if(!playName||!confirm(playName+' arşive taşınsın mı?')) return;
+    fetch(BACKEND+'/api/archive-play',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({playName})})
+      .then(r=>{if(!r.ok)throw new Error();return r.json();})
+      .then(()=>{delete CACHE[activeSheet];return loadSheet(activeSheet);})
+      .then(()=>{currentPlayIdx=Math.max(0,currentPlayIdx-1);render();})
+      .catch(()=>alert('Arşivleme başarısız'));
+  };
+
+  // Başlat
+  await loadSheets();
+  if(sheets.length){
+    // BÜTÜN OYUNLAR öncelikli
+    activeSheet = sheets.find(s=>s==='BÜTÜN OYUNLAR')||sheets[0];
+    await loadSheet(activeSheet);
+  }
+  render();
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   UI BAŞLAT
+═══════════════════════════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', () => {
+  // Hamburger
+  document.getElementById('hamburger').addEventListener('click', () => {
+    document.getElementById('nav-row').classList.toggle('open');
+  });
+
+  // Tema (dark mode skeleton — ileride genişletilebilir)
+  const themeBtn = document.getElementById('theme-btn');
+  themeBtn.addEventListener('click', () => {
+    document.documentElement.classList.toggle('dark');
+    themeBtn.textContent = document.documentElement.classList.contains('dark') ? '☀️' : '🌙';
+  });
+
+  // İlk sayfa
+  navigateTo('home');
+});
+</script>
+</body>
+</html>
